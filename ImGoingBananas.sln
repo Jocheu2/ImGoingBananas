@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36429.23 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImGoingBananas", "ImGoingBananas\ImGoingBananas.vcxproj", "{57BD4294-BBF6-4C05-A299-EFA9212BEF40}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B0913946-B230-4B29-AFA2-422FD8531F34} = {B0913946-B230-4B29-AFA2-422FD8531F34}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Prog1Engine", "Prog1Engine\Prog1Engine.vcxproj", "{B0913946-B230-4B29-AFA2-422FD8531F34}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{57BD4294-BBF6-4C05-A299-EFA9212BEF40}.Debug|x64.ActiveCfg = Debug|x64
+		{57BD4294-BBF6-4C05-A299-EFA9212BEF40}.Debug|x64.Build.0 = Debug|x64
+		{57BD4294-BBF6-4C05-A299-EFA9212BEF40}.Debug|x86.ActiveCfg = Debug|Win32
+		{57BD4294-BBF6-4C05-A299-EFA9212BEF40}.Debug|x86.Build.0 = Debug|Win32
+		{57BD4294-BBF6-4C05-A299-EFA9212BEF40}.Release|x64.ActiveCfg = Release|x64
+		{57BD4294-BBF6-4C05-A299-EFA9212BEF40}.Release|x64.Build.0 = Release|x64
+		{57BD4294-BBF6-4C05-A299-EFA9212BEF40}.Release|x86.ActiveCfg = Release|Win32
+		{57BD4294-BBF6-4C05-A299-EFA9212BEF40}.Release|x86.Build.0 = Release|Win32
+		{B0913946-B230-4B29-AFA2-422FD8531F34}.Debug|x64.ActiveCfg = Debug|x64
+		{B0913946-B230-4B29-AFA2-422FD8531F34}.Debug|x64.Build.0 = Debug|x64
+		{B0913946-B230-4B29-AFA2-422FD8531F34}.Debug|x86.ActiveCfg = Debug|Win32
+		{B0913946-B230-4B29-AFA2-422FD8531F34}.Debug|x86.Build.0 = Debug|Win32
+		{B0913946-B230-4B29-AFA2-422FD8531F34}.Release|x64.ActiveCfg = Release|x64
+		{B0913946-B230-4B29-AFA2-422FD8531F34}.Release|x64.Build.0 = Release|x64
+		{B0913946-B230-4B29-AFA2-422FD8531F34}.Release|x86.ActiveCfg = Release|Win32
+		{B0913946-B230-4B29-AFA2-422FD8531F34}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B9B23225-B6E4-44AA-B727-25A4963EF8C3}
+	EndGlobalSection
+EndGlobal
