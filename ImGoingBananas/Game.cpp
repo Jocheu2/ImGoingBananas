@@ -437,8 +437,8 @@ void DrawBloons()
 		if (g_ArrBloons[index].bloonTextureId == -1) { continue; }
 
 		const Point2f drawLocation{
-			g_ArrBloons[index].location.x + g_ArrBloonsTextures[g_ArrBloons[index].bloonTextureId].width*0.5f,
-			g_ArrBloons[index].location.y + g_ArrBloonsTextures[g_ArrBloons[index].bloonTextureId].width*0.5f
+			g_ArrBloons[index].location.x + g_ArrBloonsTextures[g_ArrBloons[index].bloonTextureId].width * 0.5f,
+			g_ArrBloons[index].location.y + g_ArrBloonsTextures[g_ArrBloons[index].bloonTextureId].width * 0.5f
 		};
 
 		const Circlef bloonCollider{
@@ -666,6 +666,7 @@ void DrawProjectiles()
 			projectileTexture.width,
 			projectileTexture.height
 		};
+		const float angle{ atan2f(g_ArrProjectiles[index].direction.y, g_ArrProjectiles[index].direction.x) * g_Rad2Deg };
 
 		const float colliderRadius{ g_ArrProjectiles[index].radius };
 
@@ -681,34 +682,36 @@ void DeleteProjectile(Projectile& projectile) {
 void UpdateProjectiles(float elapsedSec)
 {
 
-	for (int index = 0; index < g_ProjectilesOnBoardAmount; ++index) {
+	for (int projectileIdx = 0; projectileIdx < g_ProjectilesOnBoardAmount; ++projectileIdx) {
 
-		g_ArrProjectiles[index].timer += elapsedSec * 1000;
+		g_ArrProjectiles[projectileIdx].timer += elapsedSec * 1000;
 
-		if (g_ArrProjectiles[index].timer >= g_ArrProjectiles[index].lifetime) {
-			SwapProjectilesInArray(g_ArrProjectiles[index], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+		if (g_ArrProjectiles[projectileIdx].timer >= g_ArrProjectiles[projectileIdx].lifetime) {
+			SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 			DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 			continue;
 		}
 
-		if (g_ArrProjectiles[index].spriteId == -1) {
+		if (g_ArrProjectiles[projectileIdx].spriteId == -1) {
 			continue;
 		}
 
-		switch (g_ArrProjectiles[index].behaviour)
+		switch (g_ArrProjectiles[projectileIdx].behaviour)
 		{
 		case ProjectileBehaviour::Tack:
 		case ProjectileBehaviour::Dart:
-			g_ArrProjectiles[index].position = Point2f{
-				g_ArrProjectiles[index].position.x + g_ArrProjectiles[index].speed * elapsedSec * g_ArrProjectiles[index].direction.x,
-				g_ArrProjectiles[index].position.y + g_ArrProjectiles[index].speed * elapsedSec * g_ArrProjectiles[index].direction.y
+			g_ArrProjectiles[projectileIdx].position = Point2f{
+				g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectiles[projectileIdx].speed * elapsedSec * g_ArrProjectiles[projectileIdx].direction.x,
+				g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectiles[projectileIdx].speed * elapsedSec * g_ArrProjectiles[projectileIdx].direction.y
 			};
 			break;
 		case ProjectileBehaviour::Boomerang:
-			const float angle{ g_Pi + atan2f(g_ArrProjectiles[index].direction.y, g_ArrProjectiles[index].direction.x) };
-			g_ArrProjectiles[index].position = Point2f{
-				g_ArrProjectiles[index].origin.x + g_ArrProjectiles[index].direction.x * g_BoomerangSwingRadius + g_BoomerangSwingRadius * cosf(angle + 2 * g_Pi * g_ArrProjectiles[index].timer * 0.001f * g_ArrProjectiles[index].speed),
-				g_ArrProjectiles[index].origin.y + g_ArrProjectiles[index].direction.y * g_BoomerangSwingRadius + g_BoomerangSwingRadius * sinf(angle + 2 * g_Pi * g_ArrProjectiles[index].timer * 0.001f * g_ArrProjectiles[index].speed)
+			const float angle{ g_Pi + atan2f(g_ArrProjectiles[projectileIdx].direction.y, g_ArrProjectiles[projectileIdx].direction.x) };
+			g_ArrProjectiles[projectileIdx].position = Point2f{
+				g_ArrProjectiles[projectileIdx].origin.x + g_ArrProjectiles[projectileIdx].direction.x * g_BoomerangSwingRadius + 
+					g_BoomerangSwingRadius * cosf(angle + 2 * g_Pi * g_ArrProjectiles[projectileIdx].timer * 0.001f * g_ArrProjectiles[projectileIdx].speed),
+				g_ArrProjectiles[projectileIdx].origin.y + g_ArrProjectiles[projectileIdx].direction.y * g_BoomerangSwingRadius + 
+					g_BoomerangSwingRadius * sinf(angle + 2 * g_Pi * g_ArrProjectiles[projectileIdx].timer * 0.001f * g_ArrProjectiles[projectileIdx].speed)
 			};
 			break;
 		}
@@ -722,20 +725,20 @@ void UpdateProjectiles(float elapsedSec)
 			}
 
 			const Circlef projectileCollider{
-			g_ArrProjectiles[index].position.x + g_ArrProjectiles[index].radius*0.5f,
-			g_ArrProjectiles[index].position.y + g_ArrProjectiles[index].radius * 0.5f,
-			g_ArrProjectiles[index].radius
+			g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectiles[projectileIdx].radius * 0.5f,
+			g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectiles[projectileIdx].radius * 0.5f,
+			g_ArrProjectiles[projectileIdx].radius
 			};
 			const Circlef bloonCollider{
 			g_ArrBloons[bloonIdx].location.x + g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width,
 			g_ArrBloons[bloonIdx].location.y + g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width,
-			g_ArrBloonsTextures[g_ArrBloons[index].bloonTextureId].width * 0.5f
+			g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width * 0.5f
 			};
 
 			if (IsOverlapping(projectileCollider, bloonCollider)) {
 				g_Money += g_ArrBloons[bloonIdx].hp;
-				g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[index].damage;
-				SwapProjectilesInArray(g_ArrProjectiles[index], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+				g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
+				SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 				DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 				
 				break;

@@ -15,6 +15,10 @@ float g_WindowHeight{ 600 };
 
 #pragma region ownDeclarations
 // Declare your own global variables here
+// Constants
+const float g_Rad2Deg{ 180.f / g_Pi };
+const float g_Deg2Rad{ g_Pi / 180.f };
+
 //Grid
 int const g_Cols{ 5 }, g_Rows{ 4 };
 int g_BoardGrid[g_Cols * g_Rows]{
