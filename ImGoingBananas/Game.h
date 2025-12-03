@@ -97,6 +97,7 @@ struct Monkey
     float fireRate{}; // Projectiles per second
     float cooldownTimer{};
     Point2f position{};
+    Point2f targetPosition{};
 };
 struct UIMonkeyBuy {
     Texture texture{};

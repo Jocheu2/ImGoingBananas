@@ -549,7 +549,8 @@ void DrawMonkeys()
 			g_ArrMonkeys[index].position.x - monkeyTexture.width * 0.5f,
 			g_ArrMonkeys[index].position.y - monkeyTexture.height * 0.5f
 		};
-		DrawTexture(monkeyTexture, placementPosition);
+		const float angle{ atan2f(g_ArrMonkeys[index].targetPosition.y - placementPosition.y, g_ArrMonkeys[index].targetPosition.x - placementPosition.x) * g_Rad2Deg - 90 };
+		DrawTexture(monkeyTexture, placementPosition, angle);
 		utils::SetColor(1.f, 1.f, 1.f, 1.f);
 		utils::DrawEllipse(g_ArrMonkeys[index].position, g_ArrMonkeys[index].detectRadius, g_ArrMonkeys[index].detectRadius);
 	}
@@ -601,7 +602,7 @@ void UpdateMonkey(float elapsedSec)
 				InitProjectiles(g_ArrMonkeys[index].position, bloonCollider.center, g_ArrMonkeys[index].projectile);
 				//TODO: Add actual shooting
 				g_ArrMonkeys[index].cooldownTimer = 1.f / g_ArrMonkeys[index].fireRate;
-				
+				g_ArrMonkeys[index].targetPosition = bloonCollider.center;
 				break;
 			}
 
@@ -672,7 +673,7 @@ void DrawProjectiles()
 
 		utils::SetColor(1.f, 1.f, 1.f, 1.f);
 		utils::DrawEllipse(centerOfProjectile, colliderRadius, colliderRadius);
-		utils::DrawTexture(projectileTexture, projectileTexturePosition);
+		utils::DrawTexture(projectileTexture, projectileTexturePosition, angle);
 	}
 }
 void DeleteProjectile(Projectile& projectile) {

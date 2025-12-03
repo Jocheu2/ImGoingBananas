@@ -490,15 +490,17 @@ namespace utils
 		glBindTexture(GL_TEXTURE_2D, texture.id);
 		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-		// Rotation!
 		if (rotation != 0)
 		{
-			glMatrixMode(GL_TEXTURE);
+			glMatrixMode(GL_MODELVIEW);
+			glPushMatrix();
 
-			glLoadIdentity();
+			float cx = (vertexLeft + vertexRight) * 0.5f;
+			float cy = (vertexTop + vertexBottom) * 0.5f;
+
+			glTranslatef(cx, cy, 0);
 			glRotatef(rotation, 0, 0, 1);
-
-			glMatrixMode(GL_PROJECTION);
+			glTranslatef(-cx, -cy, 0);
 		}
 
 		// Draw
@@ -521,15 +523,14 @@ namespace utils
 			glEnd();
 		}
 
-		//Reset the rotation so next object won't be rotated
-		glMatrixMode(GL_TEXTURE);
-
-		glLoadIdentity();
-		glRotatef(0, 0, 0, 1);
+		if (rotation != 0)
+		{
+			glMatrixMode(GL_MODELVIEW);
+			glPopMatrix();
+		}
 
 		glMatrixMode(GL_PROJECTION);
 		glDisable(GL_TEXTURE_2D);
-
 	}
 #pragma endregion textureImplementations
 
