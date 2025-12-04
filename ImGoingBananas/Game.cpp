@@ -549,7 +549,8 @@ void DrawMonkeys()
 			g_ArrMonkeys[index].position.x - monkeyTexture.width * 0.5f,
 			g_ArrMonkeys[index].position.y - monkeyTexture.height * 0.5f
 		};
-		const float angle{ atan2f(g_ArrMonkeys[index].targetPosition.y - placementPosition.y, g_ArrMonkeys[index].targetPosition.x - placementPosition.x) * g_Rad2Deg - 90 };
+		const float angle{ atan2f(g_ArrMonkeys[index].targetPosition.y - (placementPosition.y + monkeyTexture.height * 0.5f),
+			g_ArrMonkeys[index].targetPosition.x - (placementPosition.x + monkeyTexture.width * 0.5f)) * g_Rad2Deg - 90 };
 		DrawTexture(monkeyTexture, placementPosition, angle);
 		utils::SetColor(1.f, 1.f, 1.f, 1.f);
 		utils::DrawEllipse(g_ArrMonkeys[index].position, g_ArrMonkeys[index].detectRadius, g_ArrMonkeys[index].detectRadius);
