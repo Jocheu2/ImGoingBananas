@@ -52,6 +52,7 @@ enum class ProjectileBehaviour
     Dart,
     Boomerang,
     Tack,
+    Crossbow,
     None
 };
 //Enum for pathingDirection
@@ -74,6 +75,7 @@ struct Bloon {
     float speed{};
     Point2f location{};
 };
+const int crossbowPierce{ 5 }; //Amount of bloons that can be pierced by crossbow
 struct Projectile
 {
     int spriteId{};
@@ -86,6 +88,8 @@ struct Projectile
     Point2f origin{};
     Point2f position{};
     Point2f direction{};
+    int bloonsPierced{};
+    int piercedBloonIds[crossbowPierce]{};
 };
 struct Monkey 
 {
@@ -186,6 +190,20 @@ const Projectile Tack{
     800.f,
     ProjectileBehaviour::Tack
 };
+
+const Projectile Crossbow{
+    0,
+    1,
+    20.f,
+    200.f,
+    0.f,
+    1000.f,
+    ProjectileBehaviour::Crossbow,
+    Point2f{},
+    Point2f{},
+    Point2f{},
+    0
+};
 const Projectile nullProjectile{
     -1,
     1,
@@ -202,7 +220,7 @@ const Projectile nullProjectile{
 const Monkey dartMonkey{
     0,
     0,
-    Dart,
+    Crossbow,
     100.f,
     50.f,
     0.5f
@@ -295,6 +313,7 @@ void InitPath();
 
 bool IsRectCollidingWithPath(const Rectf& rectangle);
 bool IsCircleCollidingWithPath(const Circlef& circle);
+bool IsValueInArray(const int* array, int arrayLength, int searchedValue);
 
 void PlaceMonkey(const Point2f& position, const Monkey& monkey);
 

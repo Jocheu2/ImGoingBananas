@@ -628,6 +628,14 @@ void InitProjectiles(const Point2f& source, const Point2f& destination, const Pr
 
 		newProjectile.direction = directionVector;
 
+		//In case projectile is of crossbow type, loads in guardian values that never will occur as bloon id's
+		//to prevent a case where bloon with id 0 can't be damaged by a crossbow
+		if (newProjectile.behaviour == ProjectileBehaviour::Crossbow) {
+			for (int index = 0; index < crossbowPierce; ++index) {
+				newProjectile.piercedBloonIds[index] = -1;
+			}
+		}
+
 		g_ArrProjectiles[g_ProjectilesOnBoardAmount] = newProjectile;
 		++g_ProjectilesOnBoardAmount;
 	}
@@ -710,6 +718,7 @@ void UpdateProjectiles(float elapsedSec)
 		{
 		case ProjectileBehaviour::Tack:
 		case ProjectileBehaviour::Dart:
+		case ProjectileBehaviour::Crossbow:
 			g_ArrProjectiles[projectileIdx].position = Point2f{
 				g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectiles[projectileIdx].speed * elapsedSec * g_ArrProjectiles[projectileIdx].direction.x,
 				g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectiles[projectileIdx].speed * elapsedSec * g_ArrProjectiles[projectileIdx].direction.y
@@ -746,11 +755,33 @@ void UpdateProjectiles(float elapsedSec)
 			};
 
 			if (IsOverlapping(projectileCollider, bloonCollider)) {
-				g_Money += g_ArrBloons[bloonIdx].hp;
-				g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
-				SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
-				DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 				
+				
+				
+				if (g_ArrProjectiles[projectileIdx].behaviour == ProjectileBehaviour::Crossbow &&
+					g_ArrProjectiles[projectileIdx].bloonsPierced < crossbowPierce
+					&& !IsValueInArray(g_ArrProjectiles[projectileIdx].piercedBloonIds, crossbowPierce, bloonIdx)
+					) {
+					//Behaviour on crossbow projectile overlapping Bloon while the bloon hasn't been pierced by it yet
+					g_Money += g_ArrBloons[bloonIdx].hp;
+					g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
+					g_ArrProjectiles[projectileIdx].piercedBloonIds[g_ArrProjectiles[projectileIdx].bloonsPierced] = bloonIdx;
+					++g_ArrProjectiles[projectileIdx].bloonsPierced;
+					continue;
+				}
+				else if (g_ArrProjectiles[projectileIdx].behaviour == ProjectileBehaviour::Crossbow &&
+					IsValueInArray(g_ArrProjectiles[projectileIdx].piercedBloonIds, crossbowPierce, bloonIdx) &&
+					g_ArrProjectiles[projectileIdx].bloonsPierced < crossbowPierce) {
+					//Projectile bahviour on overlapping with a bloon when it has already pierced it before
+					continue;
+				}
+				else {
+					//Default projectile behaviour on hit or once crossbow projectile pierces it's max amount of bloons
+					g_Money += g_ArrBloons[bloonIdx].hp;
+					g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
+					SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+					DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+				}
 				break;
 			}
 		}
@@ -927,6 +958,13 @@ bool IsCircleCollidingWithPath(const Circlef& circle) {
 				return true;
 			}
 		}
+	}
+	return false;
+}
+bool IsValueInArray(const int* array, int arrayLength, int searchedValue)
+{
+	for (int index = 0; index < arrayLength; ++index) {
+		if (array[index] == searchedValue) return true;
 	}
 	return false;
 }
