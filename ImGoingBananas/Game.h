@@ -99,11 +99,10 @@ struct Monkey
     Point2f position{};
     Point2f targetPosition{};
 };
-struct UIMonkeyBuy {
+struct UIButton {
     Texture texture{};
     Rectf rect{};
     bool isHoveringOver{};
-    int cost{};
 };
 #pragma endregion structs
 
@@ -240,23 +239,34 @@ const int g_AmountOfProjectiles{ 3 };
 Texture g_ArrProjectileTextures[g_AmountOfProjectiles]{};
 
 //UI
+int g_Money{ 20 };
 Point2f g_MousePosition{};
 bool g_IsUIActive{};
-float g_UIConstantShiftTransition{};
-float g_UIHorizontalOffset{};
+float g_UIShopShiftTransition{};
+float g_UIShopHorizontalOffset{};
 const int g_AmountOfMonkeyBuyButtons{ 3 };
 const int g_FontSize{ 18 };
 Texture g_TextUIBackground{};
-UIMonkeyBuy g_ArrUIMonkeyBuyButtons[g_AmountOfMonkeyBuyButtons]{};
 Texture g_ArrUIMonkeyTextButtons[g_AmountOfMonkeyBuyButtons]{};
+UIButton g_ArrUIMonkeyBuyButtons[g_AmountOfMonkeyBuyButtons]{};
+UIButton g_TextUICloseBtn{};
+UIButton g_TextUIOpenBtn{};
 int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{5, 15, 20}; //temporary fixed values
-int g_Money{ 100 };
+const Color4f g_GrayOutColor{ 0.f, 0.f, 0.f, 0.8f };
+//subection: upgrades
+bool g_IsMonkeySelected{};
+int g_SelectedMonkeyId{};
+Texture g_TextUIUpgradesBackground{};
+UIButton g_ArrBuyUpgradeBtn[2]{};
 
 //Preview Monkey
 bool g_IsPreviewOn{};
 bool g_CanPlaceMonkey{};
 int g_PreviewMonkeyId{};
+float g_UIUpgradeShiftTransition{};
+float g_UIUpgradeHorizontalOffset{};
 Texture g_ArrPreviewMonkeyTextures[g_AmountOfMonkeyTextures * 2]{};
+Texture g_ArrUIUpgradeText[g_AmountOfUpgradesPerMonkey]{};
 
 //Monkey placing
 int g_MonkeysOnBoard{ 0 };
@@ -275,7 +285,8 @@ void DrawMonkeys();
 void StartWave();
 
 void DrawUI();
-void UpdateUI(float elapsedSec);
+void UpdateUIShopMenu(float elapsedSec);
+void UpdateUIUpgradeMenu(float elapsedSec);
 void UpdateUIButtonCollisions();
 void DrawPreviewMonkey();
 
