@@ -779,7 +779,15 @@ void DrawProjectiles()
 			projectileTexture.width,
 			projectileTexture.height
 		};
-		const float angle{ atan2f(g_ArrProjectiles[index].direction.y, g_ArrProjectiles[index].direction.x) * g_Rad2Deg };
+		float angle;
+		if(g_ArrProjectiles[index].behaviour != ProjectileBehaviour::Boomerang) {
+			angle =  atan2f(g_ArrProjectiles[index].direction.y, g_ArrProjectiles[index].direction.x) * g_Rad2Deg ;
+		}
+		else {
+			const int amountOfBoomerangSpins{ 4 };
+			angle = atan2f(g_ArrProjectiles[index].direction.y, g_ArrProjectiles[index].direction.x) * g_Rad2Deg 
+				+ g_ArrProjectiles[index].timer / g_ArrProjectiles[index].lifetime * 360.f * amountOfBoomerangSpins;
+		}
 
 		const float colliderRadius{ g_ArrProjectiles[index].radius };
 
