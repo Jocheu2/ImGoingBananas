@@ -53,6 +53,7 @@ enum class ProjectileBehaviour
     Boomerang,
     Tack,
     Crossbow,
+    Ring,
     None
 };
 //Enum for pathingDirection
@@ -89,7 +90,9 @@ struct Projectile
     Point2f position{};
     Point2f direction{};
     int bloonsPierced{};
-    int piercedBloonIds[crossbowPierce]{};
+    //int piercedBloonIds[crossbowPierce]{};
+    int maxPierce{};
+    int* piercedBloonIds{ nullptr };
 };
 struct Monkey 
 {
@@ -199,6 +202,20 @@ const Projectile Crossbow{
     0.f,
     1000.f,
     ProjectileBehaviour::Crossbow,
+    Point2f{},
+    Point2f{},
+    Point2f{},
+    0,
+    crossbowPierce
+};
+const Projectile Ring{
+    0,
+    1,
+    20.f,
+    200.f,
+    0.f,
+    1000.f,
+    ProjectileBehaviour::Ring,
     Point2f{},
     Point2f{},
     Point2f{},
@@ -324,6 +341,7 @@ void InitProjectiles(const Point2f& source, const Point2f& destination, const Pr
 void UpdateProjectiles(float elapsedSec);
 void DrawProjectiles();
 void DeleteProjectile(Projectile& projectile);
+void DeletePiercedBloonIds(Projectile& projectile);
 #pragma endregion ownDeclarations
 
 #pragma region gameFunctions											
