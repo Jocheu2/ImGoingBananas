@@ -76,7 +76,6 @@ struct Bloon {
     float speed{};
     Point2f location{};
 };
-const int crossbowPierce{ 5 }; //Amount of bloons that can be pierced by crossbow
 struct Projectile
 {
     int spriteId{};
@@ -193,7 +192,7 @@ const Projectile Tack{
     800.f,
     ProjectileBehaviour::Tack
 };
-
+const int crossbowPierce{ 5 }; //Amount of bloons that can be pierced by crossbow
 const Projectile Crossbow{
     0,
     1,
@@ -208,6 +207,8 @@ const Projectile Crossbow{
     0,
     crossbowPierce
 };
+const int ringMaxPierce{ 10 }; //necessary to make ring not instantly kill everything. It needs to be high enough so
+//the ring doesn't dissapear prematurely
 const Projectile Ring{
     0,
     1,
@@ -219,7 +220,8 @@ const Projectile Ring{
     Point2f{},
     Point2f{},
     Point2f{},
-    0
+    0,
+    ringMaxPierce
 };
 const Projectile nullProjectile{
     -1,
@@ -237,7 +239,7 @@ const Projectile nullProjectile{
 const Monkey dartMonkey{
     0,
     0,
-    Crossbow,
+    Dart,
     100.f,
     50.f,
     0.5f
@@ -253,7 +255,7 @@ const Monkey boomerangMonkey{
 const Monkey tackShooter{
     2,
     0,
-    Tack,
+    Ring,
     100.f,
     50.f,
     0.5f
