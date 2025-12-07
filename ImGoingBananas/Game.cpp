@@ -118,6 +118,24 @@ void Start()
 	g_TextUIOpenBtn.rect.width = g_TextUIOpenBtn.texture.width;
 	g_TextUIOpenBtn.rect.height = g_TextUIOpenBtn.texture.height;
 
+	//Font numbers
+	for (int i = 0; i < 10; ++i)
+	{
+		if (!TextureFromString(std::to_string(i), "Resources/Fonts/Calistoga-Regular.ttf", g_FontSize, Color4f{1, 1, 1, 1}, g_ArrNumbers[i]))
+		{
+			std::cout << "ERROR! Failed to load the texture!\n";
+		}
+
+		g_AverageNumbersHeight += g_ArrNumbers[i].height;
+	}
+
+	g_AverageNumbersHeight /= 10.f;
+
+	if (!TextureFromString("$", "Resources/Fonts/Calistoga-Regular.ttf", g_FontSize, Color4f{1, 1, 1, 1}, g_MoneyIcon))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+
 	InitPath();
 	StartWave();
 }
@@ -130,16 +148,15 @@ void Draw()
 	DrawBoard();
 	DrawBloons();
 	DrawMonkeys();
-
-	DrawUI();
-
 	DrawProjectiles();
+	DrawUI();
 
 	if (g_IsPreviewOn)
 	{
 		DrawPreviewMonkey();
 	}
 
+	DrawNumberSequenceTopLeft(g_Money, Point2f{});
 }
 
 void Update(float elapsedSec)
@@ -185,12 +202,18 @@ void End()
 		DeleteTexture(g_ArrUIUpgradeText[i]);
 	}
 
+	for (int i = 0; i < 10; ++i)
+	{
+		DeleteTexture(g_ArrNumbers[i]);
+	}
+
 	DeleteTexture(g_TextUIBackground);
 	DeleteTexture(g_TextUIUpgradesBackground);
 	DeleteTexture(g_TextUICloseBtn.texture);
 	DeleteTexture(g_TextUIOpenBtn.texture);
 	DeleteTexture(g_ArrBuyUpgradeBtn[0].texture);
 	DeleteTexture(g_ArrBuyUpgradeBtn[1].texture);
+	DeleteTexture(g_MoneyIcon);
 
 	delete[] g_ArrMonkeys;
 	delete[] g_ArrBloons;
@@ -279,11 +302,17 @@ void OnMouseDownEvent(const SDL_MouseButtonEvent& e)
 
 	if (!g_IsPreviewOn)
 	{
-		g_IsMonkeySelected = false;
+		const Rectf upgradesUIBG{ 0, g_WindowHeight - g_TextUIUpgradesBackground.height, g_TextUIUpgradesBackground.width, g_TextUIUpgradesBackground.height };
+
+		if(g_IsMonkeySelected && !IsPointInRect(upgradesUIBG, g_MousePosition))
+			g_IsMonkeySelected = false;
 
 		//Check for clicks on monkeys
 		for (int i = 0; i < g_MonkeysOnBoard; ++i)
 		{
+			if (g_IsMonkeySelected && IsPointInRect(upgradesUIBG, g_MousePosition))
+				break;
+
 			const Circlef monkeyCollider{
 				g_ArrMonkeys[i].position,
 				g_ArrMonkeys[i].colliderRadius
@@ -336,6 +365,41 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 		}
 
 		//TODO: add upgrade button collision detection alongside upgrading the actual monkey
+		if (g_IsMonkeySelected && g_ArrBuyUpgradeBtn[0].isHoveringOver)
+		{
+			Monkey* monkey{ &g_ArrMonkeys[g_SelectedMonkeyId] };
+
+			if ((*monkey).monkeyUpgradeTier > g_AmountOfUpgradesPerMonkey - 2)
+			{
+				std::cout << "Error! Trying to read some memory! Cannot upgrade monkey.";
+				return;
+			}
+
+			MonkeyUpgrade upgrade{ GetMonkeyUpgradesFromIndex((*monkey).monkeyId)[(*monkey).monkeyUpgradeTier] };
+
+			if (g_Money >= upgrade.cost)
+			{
+				//upgrade
+				//TODO: add pierce upgrade
+				Projectile* projectile{ &(*monkey).projectile };
+
+				(*monkey).fireRate += upgrade.fireRate;
+				(*monkey).monkeyUpgradeTier++;
+				(*projectile).damage += upgrade.damage;
+				(*projectile).radius += upgrade.radius;
+				(*projectile).speed += upgrade.speed;
+				(*projectile).lifetime += upgrade.lifetime;
+
+				if(upgrade.swapSpriteId != -1) (*projectile).spriteId = upgrade.swapSpriteId;
+				if(upgrade.swapBehaviour != ProjectileBehaviour::None) (*projectile).behaviour = upgrade.swapBehaviour;
+
+				g_Money -= upgrade.cost;
+			}
+			else
+			{
+				std::cout << "Not enough funds to upgrade monkey! (" + std::to_string(g_Money) + "$ out of " + std::to_string(upgrade.cost) + "$ needed)\n";
+			}
+		}
 	}
 }
 #pragma endregion inputHandling
@@ -348,7 +412,6 @@ void InitPath()
 	Point2f* tempPath{ new Point2f[g_Rows * g_Cols] };
 	int currentPointIndex{ 0 };
 
-
 	//looks for the starting position, signified as -1 on board grid
 	for (int row = 0; row < g_Rows; ++row) {
 		for (int col = 0; col < g_Cols; ++col) {
@@ -358,13 +421,15 @@ void InitPath()
 				tempPath[currentPointIndex] = Point2f{ (currentColumn) * (g_CellSize.x) + g_CellSize.x ,
 				currentRow * (g_CellSize.y) };
 
+				// set bloons spawn point
+				g_SpawnPoint = Point2f{ 0, tempPath[currentPointIndex].y };
+
 				++currentPointIndex;
 				++g_PathWaypointAmount;
 				break;
 			}
 		}
 	}
-
 
 	//Looks for next path tile, until reaches the end tile signifies as 2 on board grid
 	while (g_BoardGrid[currentRow * g_Cols + currentColumn] != 2) {
@@ -561,9 +626,9 @@ void DrawBloons()
 		};
 
 		utils::DrawTexture(g_ArrBloonsTextures[g_ArrBloons[index].bloonTextureId], drawLocation);
-		utils::DrawEllipse(bloonCollider.center, bloonCollider. radius, bloonCollider.radius);
+		/*utils::DrawEllipse(bloonCollider.center, bloonCollider. radius, bloonCollider.radius);
 		utils::FillEllipse(drawLocation, 5.f, 5.f);
-		utils::FillEllipse(bloonCollider.center, 5.f, 5.f);
+		utils::FillEllipse(bloonCollider.center, 5.f, 5.f);*/
 	}
 }
 void UpdateBloons(float elapsedSec)
@@ -661,10 +726,19 @@ void DrawMonkeys()
 			g_ArrMonkeys[index].position.x - monkeyTexture.width * 0.5f,
 			g_ArrMonkeys[index].position.y - monkeyTexture.height * 0.5f
 		};
+
+		// Draw detection range only if monkey is selected
+		if (g_IsMonkeySelected && g_SelectedMonkeyId == index)
+		{
+			utils::SetColor(1.f, 1.f, 1.f, 0.5f);
+			utils::FillEllipse(g_ArrMonkeys[index].position, g_ArrMonkeys[index].detectRadius, g_ArrMonkeys[index].detectRadius);
+			utils::SetColor(1.f, 1.f, 1.f, 1.f);
+			utils::DrawEllipse(g_ArrMonkeys[index].position, g_ArrMonkeys[index].detectRadius, g_ArrMonkeys[index].detectRadius);
+		}
+
+		// Draw monkey
 		const float angle{ atan2f(g_ArrMonkeys[index].targetPosition.y - g_ArrMonkeys[index].position.y, g_ArrMonkeys[index].targetPosition.x - g_ArrMonkeys[index].position.x) * g_Rad2Deg - 90 };
 		DrawTexture(monkeyTexture, placementPosition, angle);
-		utils::SetColor(1.f, 1.f, 1.f, 1.f);
-		utils::DrawEllipse(g_ArrMonkeys[index].position, g_ArrMonkeys[index].detectRadius, g_ArrMonkeys[index].detectRadius);
 	}
 }
 void DrawPreviewMonkey()
@@ -672,10 +746,19 @@ void DrawPreviewMonkey()
 	const Point2f previewTopLeft{ g_MousePosition.x - g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2].width / 2,
 		g_MousePosition.y - g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2].height / 2 };
 
-	if (g_CanPlaceMonkey) {
+	// Draw detection radius preview
+	utils::SetColor(1.f, 1.f, 1.f, 0.5f);
+	utils::FillEllipse(g_MousePosition, GetMonkeyFromIndex(g_PreviewMonkeyId).detectRadius, GetMonkeyFromIndex(g_PreviewMonkeyId).detectRadius);
+	utils::SetColor(1.f, 1.f, 1.f, 1.f);
+	utils::DrawEllipse(g_MousePosition, GetMonkeyFromIndex(g_PreviewMonkeyId).detectRadius, GetMonkeyFromIndex(g_PreviewMonkeyId).detectRadius);
+
+	// Draw texture
+	if (g_CanPlaceMonkey) 
+	{
 		DrawTexture(g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2], previewTopLeft);
 	}
-	else {
+	else 
+	{
 		DrawTexture(g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2 + 1], previewTopLeft);
 	}
 
@@ -789,10 +872,10 @@ void DrawProjectiles()
 				+ g_ArrProjectiles[index].timer / g_ArrProjectiles[index].lifetime * 360.f * amountOfBoomerangSpins;
 		}
 
-		const float colliderRadius{ g_ArrProjectiles[index].radius };
+		//const float colliderRadius{ g_ArrProjectiles[index].radius };
 
-		utils::SetColor(1.f, 1.f, 1.f, 1.f);
-		utils::DrawEllipse(centerOfProjectile, colliderRadius, colliderRadius);
+		//utils::SetColor(1.f, 1.f, 1.f, 1.f);
+		//utils::DrawEllipse(centerOfProjectile, colliderRadius, colliderRadius);
 		utils::DrawTexture(projectileTexture, projectileTexturePosition, angle);
 	}
 }
@@ -930,13 +1013,35 @@ Monkey GetMonkeyFromIndex(int index)
 		//add cases as more monkeys are added
 	}
 }
+MonkeyUpgrade* GetMonkeyUpgradesFromIndex(int index)
+{
+	switch (index)
+	{
+		case 0:
+			return g_ArrDartUpgrades;
+			break;
+		case 1:
+			return g_ArrBoomerangUpgrades;
+			break;
+		case 2:
+			return g_ArrTackUpgrades;
+			break;
+		default:
+			std::cout << "Incorrent Monkey Index\n";
+			return g_ArrDartUpgrades;
+			break;
+
+		//add cases as more monkeys are added
+	}
+}
 
 void DrawUI()
 {
 	// Shop menu
+	const float UIButtonsInitialOffset{ g_MoneyIcon.height * 3.f / 2.f };
 	const float UIButtonsVerticalOffset{ g_WindowHeight / g_AmountOfMonkeyBuyButtons };
 	const Point2f UIShopTopLeft{ g_UIShopHorizontalOffset + g_WindowWidth - g_TextUIBackground.width, 0 };
-	const Point2f UIShopTopCenter{ g_UIShopHorizontalOffset + g_WindowWidth - g_TextUIBackground.width / 2.f, 0};
+	const Point2f UIShopTopCenter{ g_UIShopHorizontalOffset + g_WindowWidth - g_TextUIBackground.width / 2.f, 0 };
 
 	DrawTexture(g_TextUIBackground, UIShopTopLeft);
 
@@ -955,23 +1060,27 @@ void DrawUI()
 	//Draw Shop Buttons
 	for (int i = 0; i < g_AmountOfMonkeyBuyButtons; ++i)
 	{
-		const Point2f ButtonTopLeft{ UIShopTopCenter.x - g_ArrUIMonkeyBuyButtons[i].rect.width / 2, UIButtonsVerticalOffset * i };
-		const Point2f TextTopLeft{ UIShopTopCenter.x - g_ArrUIMonkeyTextButtons[i].width / 2,
-			UIButtonsVerticalOffset* i + g_ArrUIMonkeyBuyButtons[i].rect.height };
+		const Point2f costTopCenter{ UIShopTopCenter.x + g_MoneyIcon.width / 2.f, UIButtonsInitialOffset + UIButtonsVerticalOffset * i - g_AverageNumbersHeight };
+		const Point2f buttonTopLeft{ UIShopTopCenter.x - g_ArrUIMonkeyBuyButtons[i].rect.width / 2, UIButtonsInitialOffset + UIButtonsVerticalOffset * i };
+		const Point2f textTopLeft{ UIShopTopCenter.x - g_ArrUIMonkeyTextButtons[i].width / 2,
+			UIButtonsInitialOffset + UIButtonsVerticalOffset * i + g_ArrUIMonkeyBuyButtons[i].rect.height };
 		const int cost{ g_ArrUIMonkeyPrices[i] };
+		const float costWidth{ DrawNumberSequenceTopCenter(cost, costTopCenter) };
+		const Point2f moneyIconTopLeft{ costTopCenter.x - costWidth - g_MoneyIcon.width, costTopCenter.y };
 
-		g_ArrUIMonkeyBuyButtons[i].rect.left = ButtonTopLeft.x;
-		g_ArrUIMonkeyBuyButtons[i].rect.top = ButtonTopLeft.y;
+		g_ArrUIMonkeyBuyButtons[i].rect.left = buttonTopLeft.x;
+		g_ArrUIMonkeyBuyButtons[i].rect.top = buttonTopLeft.y;
 
-		DrawTexture(g_ArrUIMonkeyBuyButtons[i].texture, ButtonTopLeft);
+		DrawTexture(g_ArrUIMonkeyBuyButtons[i].texture, buttonTopLeft);
 		//Gray out the button if you don't have enough cash
 		if (g_Money < cost)
 		{
 			utils::SetColor(g_GrayOutColor);
-			utils::FillRect(ButtonTopLeft, g_ArrUIMonkeyBuyButtons[i].rect.width, g_ArrUIMonkeyBuyButtons[i].rect.height);
+			utils::FillRect(buttonTopLeft, g_ArrUIMonkeyBuyButtons[i].rect.width, g_ArrUIMonkeyBuyButtons[i].rect.height);
 		}
 
-		DrawTexture(g_ArrUIMonkeyTextButtons[i], TextTopLeft);
+		DrawTexture(g_MoneyIcon, moneyIconTopLeft);
+		DrawTexture(g_ArrUIMonkeyTextButtons[i], textTopLeft);
 	}
 
 	// Upgrades menu
@@ -995,16 +1104,27 @@ void DrawUI()
 			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + currentUpgradeTexture.height };
 		DrawTexture(currentUpgradeTexture, currentUpgradeTextTopLeft);
 
-		UIButton buyButton{ g_ArrBuyUpgradeBtn[0] };
+		UIButton* buyButton{ &g_ArrBuyUpgradeBtn[0] };
 		if (g_ArrMonkeys[g_SelectedMonkeyId].monkeyUpgradeTier == g_AmountOfUpgradesPerMonkey - 1)
-			buyButton = g_ArrBuyUpgradeBtn[1];
+		{
+			buyButton = &g_ArrBuyUpgradeBtn[1];
+			g_ArrBuyUpgradeBtn[0].rect.left = -1000; // get button far away so we can't click it when upgrades are maxed
+		}
 
-		const Point2f buyButtonTopLeft{ UIUpgradeTopCenter.x - buyButton.rect.width / 2.f,
-			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + currentUpgradeTexture.height + buyButton.rect.height };
-		buyButton.rect.left = buyButtonTopLeft.x;
-		buyButton.rect.top = buyButtonTopLeft.y;
+		const Point2f buyButtonTopLeft{ UIUpgradeTopCenter.x - (*buyButton).rect.width / 2.f,
+			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + currentUpgradeTexture.height + (*buyButton).rect.height };
+		(*buyButton).rect.left = buyButtonTopLeft.x;
+		(*buyButton).rect.top = buyButtonTopLeft.y;
 
-		DrawTexture(buyButton.texture, buyButtonTopLeft);
+		DrawTexture((*buyButton).texture, buyButtonTopLeft);
+
+		int cost{ GetMonkeyUpgradesFromIndex(g_ArrMonkeys[g_SelectedMonkeyId].monkeyId)[g_ArrMonkeys[g_SelectedMonkeyId].monkeyUpgradeTier].cost };
+		const Point2f costTextTopCenter{ UIUpgradeTopCenter.x + g_MoneyIcon.width / 2.f,
+			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + currentUpgradeTexture.height + (*buyButton).rect.height * 2 };
+		const float costTextWidth{ DrawNumberSequenceTopCenter(cost, costTextTopCenter) };
+
+		const Point2f moneyIconTopLeft{ costTextTopCenter.x - g_MoneyIcon.width - costTextWidth, costTextTopCenter.y };
+		DrawTexture(g_MoneyIcon, moneyIconTopLeft);
 	}
 }
 void UpdateUIShopMenu(float elapsedSec)
@@ -1095,6 +1215,51 @@ void UpdateUIButtonCollisions()
 		g_TextUIOpenBtn.isHoveringOver = true;
 		g_TextUICloseBtn.isHoveringOver = false;
 	}
+
+	// Upgrades UI
+	g_ArrBuyUpgradeBtn[0].isHoveringOver = false;
+
+	if (IsPointInRect(g_ArrBuyUpgradeBtn[0].rect, g_MousePosition) && g_IsMonkeySelected)
+	{
+		g_ArrBuyUpgradeBtn[0].isHoveringOver = true;
+	}
+}
+float DrawNumberSequenceTopCenter(int number, const Point2f& topCenter)
+{
+	int numberOfDigits{ static_cast<int>(log10f(number) + 1) };
+	float width{};
+
+	for (int i = numberOfDigits; i >= 1; --i)
+	{
+		int digit{ static_cast<int>(number % static_cast<int>(powf(10, i)) / powf(10, i - 1)) };
+		width += g_ArrNumbers[digit].width;
+	}
+
+	Point2f nextDigitTopLeft{ topCenter.x - width / 2.f, topCenter.y };
+
+	for (int i = numberOfDigits; i >= 1; --i)
+	{
+		int digit{ static_cast<int>(number % static_cast<int>(powf(10, i)) / powf(10, i - 1)) };
+		DrawTexture(g_ArrNumbers[digit], nextDigitTopLeft);
+		nextDigitTopLeft.x += g_ArrNumbers[digit].width;
+	}
+
+	return width;
+}
+float DrawNumberSequenceTopLeft(int number, Point2f topLeft)
+{
+	int numberOfDigits{ static_cast<int>(log10f(number) + 1) };
+	float width{};
+
+	for (int i = numberOfDigits; i >= 1; --i)
+	{
+		int digit{ static_cast<int>(number % static_cast<int>(powf(10, i)) / powf(10, i - 1)) };
+		DrawTexture(g_ArrNumbers[digit], topLeft);
+		topLeft.x += g_ArrNumbers[digit].width;
+		width += g_ArrNumbers[digit].width;
+	}
+
+	return width;
 }
 
 void NormalizeVector(Point2f& vector)
