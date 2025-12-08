@@ -94,6 +94,7 @@ struct Monkey
     float colliderRadius{};
     float fireRate{}; // Projectiles per second
     float cooldownTimer{};
+    int moneySpent{};
     Point2f position{};
     Point2f targetPosition{};
 };
@@ -307,6 +308,9 @@ bool g_IsMonkeySelected{};
 int g_SelectedMonkeyId{};
 Texture g_TextUIUpgradesBackground{};
 UIButton g_ArrBuyUpgradeBtn[2]{};
+//subection: selling
+const float g_ReturnCostCoefficient{ 0.6f };
+UIButton g_SellMonkeyBtn{};
 
 //Preview Monkey
 bool g_IsPreviewOn{};
@@ -450,8 +454,9 @@ bool IsCircleCollidingWithPath(const Circlef& circle);
 bool IsValueInArray(const int* array, int arrayLength, int searchedValue);
 
 void PlaceMonkey(const Point2f& position, const Monkey& monkey);
-
 void UpdateMonkey(float elapsedSec);
+void DestroyMonkey(int monkeyId);
+void SwapMonkeysInArray(Monkey& monkey1, Monkey& monkey2);
 
 void SwapProjectilesInArray(Projectile& proj1, Projectile& proj2);
 void InitProjectiles(const Point2f& source, const Point2f& destination, const Projectile& projectile);
