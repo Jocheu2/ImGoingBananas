@@ -197,6 +197,13 @@ void End()
 		DeleteTexture(g_ArrUIMonkeyTextButtons[i]);
 	}
 
+	//Delete information on pierced bloons from existing projectiles
+	for (int i{}; i < g_ProjectilesOnBoardAmount; ++i) { 
+		if (g_ArrProjectiles[i].maxPierce > 0 &&
+			g_ArrProjectiles[i].piercedBloonIds != nullptr) {
+			DeletePiercedBloonIds(g_ArrProjectiles[i]);
+		}
+	}
 	for (int i = 0; i < g_AmountOfUpgradesPerMonkey; ++i)
 	{
 		DeleteTexture(g_ArrUIUpgradeText[i]);
@@ -292,6 +299,7 @@ void OnMouseDownEvent(const SDL_MouseButtonEvent& e)
 	static_cast<float>(e.x),
 	static_cast<float>(e.y)
 	};
+	if(g_CanPlaceMonkey && g_IsPreviewOn) PlaceMonkey(mousePosition, GetMonkeyFromIndex(g_PreviewMonkeyId));
 	
 	if (g_CanPlaceMonkey && g_IsPreviewOn) 
 	{
@@ -822,6 +830,15 @@ void InitProjectiles(const Point2f& source, const Point2f& destination, const Pr
 
 		newProjectile.direction = directionVector;
 
+		//In case projectile is of crossbow type, loads in guardian values that never will occur as bloon id's
+		//to prevent a case where bloon with id 0 can't be damaged by a crossbow
+		if (newProjectile.maxPierce > 0) {
+			newProjectile.piercedBloonIds = new int[newProjectile.maxPierce] {};
+			for (int index = 0; index < newProjectile.maxPierce; ++index) {
+				newProjectile.piercedBloonIds[index] = -1;
+			}
+		}
+
 		g_ArrProjectiles[g_ProjectilesOnBoardAmount] = newProjectile;
 		++g_ProjectilesOnBoardAmount;
 	}
@@ -883,6 +900,11 @@ void DeleteProjectile(Projectile& projectile) {
 	projectile = nullProjectile;
 	--g_ProjectilesOnBoardAmount;
 }
+void DeletePiercedBloonIds(Projectile& projectile)
+{
+	delete[] projectile.piercedBloonIds;
+	projectile.piercedBloonIds = nullptr;
+}
 void UpdateProjectiles(float elapsedSec)
 {
 
@@ -891,6 +913,7 @@ void UpdateProjectiles(float elapsedSec)
 		g_ArrProjectiles[projectileIdx].timer += elapsedSec * 1000;
 
 		if (g_ArrProjectiles[projectileIdx].timer >= g_ArrProjectiles[projectileIdx].lifetime) {
+			DeletePiercedBloonIds(g_ArrProjectiles[projectileIdx]);
 			SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 			DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 			continue;
@@ -904,10 +927,14 @@ void UpdateProjectiles(float elapsedSec)
 		{
 		case ProjectileBehaviour::Tack:
 		case ProjectileBehaviour::Dart:
+		case ProjectileBehaviour::Crossbow:
 			g_ArrProjectiles[projectileIdx].position = Point2f{
 				g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectiles[projectileIdx].speed * elapsedSec * g_ArrProjectiles[projectileIdx].direction.x,
 				g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectiles[projectileIdx].speed * elapsedSec * g_ArrProjectiles[projectileIdx].direction.y
 			};
+			break;
+		case ProjectileBehaviour::Ring:
+			g_ArrProjectiles[projectileIdx].radius += g_ArrProjectiles[projectileIdx].speed *0.5f * elapsedSec;
 			break;
 		case ProjectileBehaviour::Boomerang:
 			const float angle{ g_Pi + atan2f(g_ArrProjectiles[projectileIdx].direction.y, g_ArrProjectiles[projectileIdx].direction.x) };
@@ -918,21 +945,35 @@ void UpdateProjectiles(float elapsedSec)
 					g_BoomerangSwingRadius * sinf(angle + 2 * g_Pi * g_ArrProjectiles[projectileIdx].timer * 0.001f * g_ArrProjectiles[projectileIdx].speed)
 			};
 			break;
+		
 		}
 
-		//TODO: Add detection collison for Bloons and damaging them
 
 		for (int bloonIdx = 0; bloonIdx < g_TotalAmountOfBloons; ++bloonIdx) {
 
+			//case for if a bloon is a nullBloon
 			if (g_ArrBloons[bloonIdx].bloonTextureId == -1) {
 				continue;
 			}
 
-			const Circlef projectileCollider{
+			Circlef projectileCollider{};
+			if (g_ArrProjectiles[projectileIdx].behaviour == ProjectileBehaviour::Ring) {
+				//Necessary to keep the ring type projectile in it's origin place, it's position can't be tied
+				//to it's radius, otherwise it keeps shifting
+				projectileCollider = Circlef{
+			g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectileTextures[g_ArrProjectiles[projectileIdx].spriteId].width * 0.5f,
+			g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectileTextures[g_ArrProjectiles[projectileIdx].spriteId].height * 0.5f,
+			g_ArrProjectiles[projectileIdx].radius
+				};
+			}
+			else {
+				projectileCollider = Circlef{
 			g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectiles[projectileIdx].radius * 0.5f,
 			g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectiles[projectileIdx].radius * 0.5f,
 			g_ArrProjectiles[projectileIdx].radius
-			};
+				};
+			}
+
 			const Circlef bloonCollider{
 			g_ArrBloons[bloonIdx].location.x + g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width,
 			g_ArrBloons[bloonIdx].location.y + g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width,
@@ -940,11 +981,36 @@ void UpdateProjectiles(float elapsedSec)
 			};
 
 			if (IsOverlapping(projectileCollider, bloonCollider)) {
-				g_Money += g_ArrBloons[bloonIdx].hp;
-				g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
-				SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
-				DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 				
+				
+				
+				if (g_ArrProjectiles[projectileIdx].maxPierce >0 &&
+					g_ArrProjectiles[projectileIdx].bloonsPierced < g_ArrProjectiles[projectileIdx].maxPierce
+					&& !IsValueInArray(g_ArrProjectiles[projectileIdx].piercedBloonIds, g_ArrProjectiles[projectileIdx].maxPierce, bloonIdx)
+					) {
+					//Behaviour handling on overlap if projectile can pierce multiple bloons AND hasn't pierced
+					//given bloon before
+					g_Money += g_ArrBloons[bloonIdx].hp;
+					g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
+					g_ArrProjectiles[projectileIdx].piercedBloonIds[g_ArrProjectiles[projectileIdx].bloonsPierced] = bloonIdx;
+					++g_ArrProjectiles[projectileIdx].bloonsPierced;
+					continue;
+				}
+				else if (g_ArrProjectiles[projectileIdx].maxPierce > 0 &&
+					IsValueInArray(g_ArrProjectiles[projectileIdx].piercedBloonIds, g_ArrProjectiles[projectileIdx].maxPierce, bloonIdx) &&
+					g_ArrProjectiles[projectileIdx].bloonsPierced < g_ArrProjectiles[projectileIdx].maxPierce) {
+					//Behaviour handling on overlap if projectile can pierce multiple bloons AND hasn't pierced
+					//given bloon before
+					continue;
+				}
+				else {
+					//Default projectile behaviour on hit or once crossbow projectile pierces it's max amount of bloons
+					g_Money += g_ArrBloons[bloonIdx].hp;
+					g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
+					DeletePiercedBloonIds(g_ArrProjectiles[projectileIdx]);
+					SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+					DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+				}
 				break;
 			}
 		}
@@ -1302,6 +1368,13 @@ bool IsCircleCollidingWithPath(const Circlef& circle) {
 				return true;
 			}
 		}
+	}
+	return false;
+}
+bool IsValueInArray(const int* array, int arrayLength, int searchedValue)
+{
+	for (int index = 0; index < arrayLength; ++index) {
+		if (array[index] == searchedValue) return true;
 	}
 	return false;
 }

@@ -43,6 +43,8 @@ enum class ProjectileBehaviour
     Dart,
     Boomerang,
     Tack,
+    Crossbow,
+    Ring,
     None
 };
 enum class Direction {
@@ -76,6 +78,10 @@ struct Projectile
     Point2f origin{};
     Point2f position{};
     Point2f direction{};
+    int bloonsPierced{};
+    //int piercedBloonIds[crossbowPierce]{};
+    int maxPierce{};
+    int* piercedBloonIds{ nullptr };
 };
 struct Monkey 
 {
@@ -187,6 +193,37 @@ const Projectile Tack{
     800.f,
     ProjectileBehaviour::Tack
 };
+const int crossbowPierce{ 5 }; //Amount of bloons that can be pierced by crossbow
+const Projectile Crossbow{
+    0,
+    1,
+    20.f,
+    200.f,
+    0.f,
+    1000.f,
+    ProjectileBehaviour::Crossbow,
+    Point2f{},
+    Point2f{},
+    Point2f{},
+    0,
+    crossbowPierce
+};
+const int ringMaxPierce{ 10 }; //necessary to make ring not instantly kill everything. It needs to be high enough so
+//the ring doesn't dissapear prematurely
+const Projectile Ring{
+    0,
+    1,
+    20.f,
+    200.f,
+    0.f,
+    1000.f,
+    ProjectileBehaviour::Ring,
+    Point2f{},
+    Point2f{},
+    Point2f{},
+    0,
+    ringMaxPierce
+};
 const Projectile nullProjectile{
     -1,
     1,
@@ -219,7 +256,7 @@ const Monkey boomerangMonkey{
 const Monkey tackShooter{
     2,
     0,
-    Tack,
+    Ring,
     100.f,
     50.f,
     0.5f
@@ -380,6 +417,7 @@ void InitPath();
 
 bool IsRectCollidingWithPath(const Rectf& rectangle);
 bool IsCircleCollidingWithPath(const Circlef& circle);
+bool IsValueInArray(const int* array, int arrayLength, int searchedValue);
 
 void PlaceMonkey(const Point2f& position, const Monkey& monkey);
 
@@ -390,6 +428,7 @@ void InitProjectiles(const Point2f& source, const Point2f& destination, const Pr
 void UpdateProjectiles(float elapsedSec);
 void DrawProjectiles();
 void DeleteProjectile(Projectile& projectile);
+void DeletePiercedBloonIds(Projectile& projectile);
 #pragma endregion ownDeclarations
 
 #pragma region gameFunctions											
