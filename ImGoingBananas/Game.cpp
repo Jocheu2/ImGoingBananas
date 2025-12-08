@@ -79,7 +79,11 @@ void Start()
 	if (!TextureFromString("Tack Shooter", "Resources/Fonts/Calistoga-Regular.ttf", g_FontSize, Color4f{ 1, 1, 1, 1 }, g_ArrUIMonkeyTextButtons[2]))
 	{
 		std::cout << "ERROR! Failed to load the texture!\n";
+	}if (!TextureFromFile("Resources/UI/nextWave.png", g_NextWaveBtn.texture)) {
+		std::cout << "ERROR! Failed to load the texture!\n";
 	}
+	g_NextWaveBtn.rect.width = g_NextWaveBtn.texture.width;
+	g_NextWaveBtn.rect.height = g_NextWaveBtn.texture.height;
 
 	if (!TextureFromFile("Resources/UI/BG.png", g_TextUIBackground))
 	{
@@ -221,6 +225,7 @@ void End()
 	DeleteTexture(g_ArrBuyUpgradeBtn[0].texture);
 	DeleteTexture(g_ArrBuyUpgradeBtn[1].texture);
 	DeleteTexture(g_MoneyIcon);
+	DeleteTexture(g_NextWaveBtn.texture);
 
 	delete[] g_ArrMonkeys;
 	delete[] g_ArrBloons;
@@ -402,6 +407,8 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 
 				if(upgrade.swapSpriteId != -1) (*projectile).spriteId = upgrade.swapSpriteId;
 				if(upgrade.swapBehaviour != ProjectileBehaviour::None) (*projectile).behaviour = upgrade.swapBehaviour;
+
+				ResizeProjectileArray();
 
 				g_Money -= upgrade.cost;
 			}
@@ -603,7 +610,7 @@ void StartWave()
 			--arrBloonsToSpawn[textureIndex];
 		}
 	}
-
+	g_AmountActiveBloons = g_TotalAmountOfBloons;
 	delete[] arrBloonsToSpawn;
 }
 
@@ -646,7 +653,12 @@ void UpdateBloons(float elapsedSec)
 	for (int index = 0; index < g_TotalAmountOfBloons; ++index) 
 	{
 		
+		if (g_ArrBloons[index].bloonTextureId == -1) {
+			continue;
+		}
+
 		if (g_ArrBloons[index].hp <= 0) {
+			--g_AmountActiveBloons;
 			DestroyBloon(g_ArrBloons[index]);
 			continue;
 		}
@@ -704,29 +716,10 @@ void PlaceMonkey(const Point2f& position, const Monkey& monkey)
 	g_ArrMonkeys = tempArrayMonkey;
 	g_IsPreviewOn = false;
 
-	//adds monkeys to the array, and determines how many projectiles can be on board based on projectile lifetime and amount of monkeys
-	g_MaxProjectilesOnBoard = 0;
-	for (int index = 0; index < g_MonkeysOnBoard; ++index) {
-		int scalar{};
-		const float projectilesCooldown{ 1 / g_ArrMonkeys[index].fireRate };
-		g_ArrMonkeys[index].projectile.behaviour == ProjectileBehaviour::Tack ? scalar = g_TackCount : scalar = 1;
-
-		g_MaxProjectilesOnBoard += ceilf(g_ArrMonkeys[index].projectile.lifetime / projectilesCooldown * 0.001f) * scalar;
-	}
-
-	//projecttiles
-	Projectile* tempProjectileArray = new Projectile[g_MaxProjectilesOnBoard];
-
-	for (int index = 0; index < g_ProjectilesOnBoardAmount; ++index)
-	{
-		tempProjectileArray[index] = g_ArrProjectiles[index];
-	}
-
+	//determines how many projectiles can be on board based on projectile lifetime and amount of monkeys
+	ResizeProjectileArray();
 	//removes appropriate amount of money from players wallet
 	g_Money -= g_ArrUIMonkeyPrices[monkey.monkeyId];
-
-	delete[] g_ArrProjectiles;
-	g_ArrProjectiles = tempProjectileArray;
 }
 void DrawMonkeys()
 {
@@ -910,6 +903,28 @@ void DeletePiercedBloonIds(Projectile& projectile)
 {
 	delete[] projectile.piercedBloonIds;
 	projectile.piercedBloonIds = nullptr;
+}
+void ResizeProjectileArray()
+{
+	g_MaxProjectilesOnBoard = 0;
+	for (int index = 0; index < g_MonkeysOnBoard; ++index) {
+		int scalar{};
+		const float projectilesCooldown{ 1 / g_ArrMonkeys[index].fireRate };
+		g_ArrMonkeys[index].projectile.behaviour == ProjectileBehaviour::Tack ? scalar = g_TackCount : scalar = 1;
+
+		g_MaxProjectilesOnBoard += ceilf(g_ArrMonkeys[index].projectile.lifetime / projectilesCooldown * 0.001f) * scalar;
+	}
+
+	//projecttiles
+	Projectile* tempProjectileArray = new Projectile[g_MaxProjectilesOnBoard];
+
+	for (int index = 0; index < g_ProjectilesOnBoardAmount; ++index)
+	{
+		tempProjectileArray[index] = g_ArrProjectiles[index];
+	}
+
+	delete[] g_ArrProjectiles;
+	g_ArrProjectiles = tempProjectileArray;
 }
 void UpdateProjectiles(float elapsedSec)
 {
@@ -1262,6 +1277,16 @@ void DrawUI()
 		const Point2f moneyIconTopLeft{ costTextTopCenter.x - g_MoneyIcon.width - costTextWidth, costTextTopCenter.y };
 		DrawTexture(g_MoneyIcon, moneyIconTopLeft);
 	}
+
+	//Next wave button
+	if (g_AmountActiveBloons <= 20) {
+		const Point2f nextWaveTopLeft{
+		g_WindowWidth/2.f - g_NextWaveBtn.rect.width*0.5f,
+		-g_NextWaveVerticallOffset + g_WindowHeight + g_NextWaveBtn.rect.height };
+		g_NextWaveBtn.rect.top = nextWaveTopLeft.y;
+		g_NextWaveBtn.rect.left = nextWaveTopLeft.x;
+		DrawTexture(g_NextWaveBtn.texture, g_NextWaveBtn.rect);
+	}
 }
 void UpdateUIShopMenu(float elapsedSec)
 {
@@ -1323,6 +1348,26 @@ void UpdateUIUpgradeMenu(float elapsedSec)
 
 		const float t{ g_UIUpgradeShiftTransition / g_TextUIUpgradesBackground.width };
 		g_UIUpgradeHorizontalOffset = g_TextUIUpgradesBackground.width * powf(t, 2);
+	}
+}
+void UpdateUINextWave(float elapsedSec)
+{
+	const float transitionSpeedScalar{ 1.5f };
+	if (g_AmountActiveBloons <= 20) {
+		if ((g_UINextWaveShiftTransition - g_NextWaveBtn.rect.height)) {
+			return;
+		}
+
+		g_UINextWaveShiftTransition += g_NextWaveBtn.rect.height * transitionSpeedScalar * elapsedSec;
+		if (g_UINextWaveShiftTransition < g_NextWaveBtn.rect.height - 50.f) {
+			g_UINextWaveShiftTransition = g_NextWaveBtn.rect.height - 50.f;
+		}
+
+		const float t{ g_UINextWaveShiftTransition / g_NextWaveBtn.rect.height };
+		g_NextWaveVerticallOffset = g_NextWaveBtn.rect.height * t;
+	}
+	else {
+		g_UINextWaveShiftTransition = 0;
 	}
 }
 //Add more UI collisions as you add more buttons

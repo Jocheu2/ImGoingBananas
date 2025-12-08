@@ -270,6 +270,7 @@ const Monkey tackShooter{
 //Wave
 int g_BloonsHpToSpawn{ 50 };
 int g_TotalAmountOfBloons{};
+int g_AmountActiveBloons{};
 int g_CurrentWave{ 0 };
 Bloon* g_ArrBloons{ nullptr };
 
@@ -316,6 +317,13 @@ float g_UIUpgradeHorizontalOffset{};
 Texture g_ArrPreviewMonkeyTextures[g_AmountOfMonkeyTextures * 2]{};
 Texture g_ArrUIUpgradeText[g_AmountOfUpgradesPerMonkey]{};
 
+//Next wave button
+UIButton g_NextWaveBtn{};
+float g_NextWaveVerticallOffset{};
+float g_UINextWaveShiftTransition{};
+
+// Upgrades
+//Dart
 // Upgrades
 //Dart
 MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
@@ -414,6 +422,7 @@ void StartWave();
 void DrawUI();
 void UpdateUIShopMenu(float elapsedSec);
 void UpdateUIUpgradeMenu(float elapsedSec);
+void UpdateUINextWave(float elapsedSec);
 void UpdateUIButtonCollisions();
 void DrawPreviewMonkey();
 float DrawNumberSequenceTopCenter(int number, const Point2f& topCenter); //returns width
@@ -448,6 +457,7 @@ void UpdateProjectiles(float elapsedSec);
 void DrawProjectiles();
 void DeleteProjectile(Projectile& projectile);
 void DeletePiercedBloonIds(Projectile& projectile);
+void ResizeProjectileArray();
 #pragma endregion ownDeclarations
 
 #pragma region gameFunctions											
