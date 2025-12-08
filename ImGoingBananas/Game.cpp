@@ -960,10 +960,13 @@ void UpdateProjectiles(float elapsedSec)
 				//to it's radius, otherwise it keeps shifting
 				projectileCollider = Circlef{
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 					g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectileTextures[g_ArrProjectiles[projectileIdx].spriteId].width * 0.5f,
 					g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectileTextures[g_ArrProjectiles[projectileIdx].spriteId].height * 0.5f,
 					g_ArrProjectiles[projectileIdx].radius
 =======
+=======
+>>>>>>> Stashed changes
 			g_ArrProjectiles[projectileIdx].origin.x,
 			g_ArrProjectiles[projectileIdx].origin.y,
 			g_ArrProjectiles[projectileIdx].radius
