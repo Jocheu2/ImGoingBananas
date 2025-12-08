@@ -106,10 +106,11 @@ struct MonkeyUpgrade
     int damage{}; // increases damage
     int pierce{}; // increases pierce
     float radius{}; // increases radius
+    float homeRadius{}; // increases home radius (and makes projectile home duh)
     float fireRate{}; // increases fire rate of monkey
     float speed{}; // increases speed of projectile
     float lifetime{}; // increases lifetime
-    int swapSpriteId{ -1 }; // Swaps current sprite. Will ignore if set to -1
+    int swapSpriteId{ -1 }; // Swaps current projectile sprite. Will ignore if set to -1
     ProjectileBehaviour swapBehaviour{ ProjectileBehaviour::None }; // Swaps current behaviour. Will ignore ProjectileBehaviour::None
 };
 #pragma endregion structs
@@ -265,6 +266,7 @@ const Monkey tackShooter{
 //Wave
 int g_BloonsHpToSpawn{ 50 };
 int g_TotalAmountOfBloons{};
+int g_AmountActiveBloons{};
 int g_CurrentWave{ 0 };
 Bloon* g_ArrBloons{ nullptr };
 
@@ -311,6 +313,13 @@ float g_UIUpgradeHorizontalOffset{};
 Texture g_ArrPreviewMonkeyTextures[g_AmountOfMonkeyTextures * 2]{};
 Texture g_ArrUIUpgradeText[g_AmountOfUpgradesPerMonkey]{};
 
+//Next wave button
+UIButton g_NextWaveBtn{};
+float g_NextWaveVerticallOffset{};
+float g_UINextWaveShiftTransition{};
+
+// Upgrades
+//Dart
 // Upgrades
 //Dart
 MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
@@ -319,6 +328,7 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         1,      //damage
         0,      //pierce
         2,      //radius
+        0,      //home radius
         0.5f,   //firerate
         0,      //speed
         2       //lifetime
@@ -328,6 +338,7 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         2,      //damage
         0,      //pierce
         1,      //radius
+        0,      //home radius
         0,      //firerate
         2,      //speed
         0       //lifetime
@@ -337,9 +348,10 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
 MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
         10,     //cost
-        1,      //damage
-        0,      //pierce
-        2,      //radius
+        0,      //damage
+        5,      //pierce
+        5,      //radius
+        0,      //home radius
         0.5f,   //firerate
         0,      //speed
         0       //lifetime
@@ -349,6 +361,7 @@ MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         2,      //damage
         0,      //pierce
         1,      //radius
+        1,      //home radius
         0,      //firerate
         2,      //speed
         0       //lifetime
@@ -361,7 +374,8 @@ MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         1,      //damage
         0,      //pierce
         2,      //radius
-        1.f,   //firerate
+        0,      //home radius
+        1.f,    //firerate
         2,      //speed
         0       //lifetime
     },
@@ -370,7 +384,8 @@ MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         2,      //damage
         0,      //pierce
         1,      //radius
-        2.f,      //firerate
+        0,      //home radius
+        2.f,    //firerate
         2,      //speed
         0       //lifetime
     }
@@ -395,6 +410,7 @@ void StartWave();
 void DrawUI();
 void UpdateUIShopMenu(float elapsedSec);
 void UpdateUIUpgradeMenu(float elapsedSec);
+void UpdateUINextWave(float elapsedSec);
 void UpdateUIButtonCollisions();
 void DrawPreviewMonkey();
 float DrawNumberSequenceTopCenter(int number, const Point2f& topCenter); //returns width
@@ -429,6 +445,7 @@ void UpdateProjectiles(float elapsedSec);
 void DrawProjectiles();
 void DeleteProjectile(Projectile& projectile);
 void DeletePiercedBloonIds(Projectile& projectile);
+void ResizeProjectileArray();
 #pragma endregion ownDeclarations
 
 #pragma region gameFunctions											
