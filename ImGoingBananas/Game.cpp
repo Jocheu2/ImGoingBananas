@@ -388,13 +388,13 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 			if (g_Money >= upgrade.cost)
 			{
 				//upgrade
-				//TODO: add pierce upgrade
 				Projectile* projectile{ &(*monkey).projectile };
 
 				(*monkey).fireRate += upgrade.fireRate;
 				(*monkey).monkeyUpgradeTier++;
 				(*projectile).damage += upgrade.damage;
 				(*projectile).radius += upgrade.radius;
+				(*projectile).maxPierce += upgrade.pierce;
 				(*projectile).speed += upgrade.speed;
 				(*projectile).lifetime += upgrade.lifetime;
 
@@ -907,9 +907,7 @@ void DeletePiercedBloonIds(Projectile& projectile)
 }
 void UpdateProjectiles(float elapsedSec)
 {
-
 	for (int projectileIdx = 0; projectileIdx < g_ProjectilesOnBoardAmount; ++projectileIdx) {
-
 		g_ArrProjectiles[projectileIdx].timer += elapsedSec * 1000;
 
 		if (g_ArrProjectiles[projectileIdx].timer >= g_ArrProjectiles[projectileIdx].lifetime) {
@@ -925,29 +923,29 @@ void UpdateProjectiles(float elapsedSec)
 
 		switch (g_ArrProjectiles[projectileIdx].behaviour)
 		{
-		case ProjectileBehaviour::Tack:
-		case ProjectileBehaviour::Dart:
-		case ProjectileBehaviour::Crossbow:
-			g_ArrProjectiles[projectileIdx].position = Point2f{
-				g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectiles[projectileIdx].speed * elapsedSec * g_ArrProjectiles[projectileIdx].direction.x,
-				g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectiles[projectileIdx].speed * elapsedSec * g_ArrProjectiles[projectileIdx].direction.y
-			};
-			break;
-		case ProjectileBehaviour::Ring:
-			g_ArrProjectiles[projectileIdx].radius += g_ArrProjectiles[projectileIdx].speed *0.5f * elapsedSec;
-			break;
-		case ProjectileBehaviour::Boomerang:
-			const float angle{ g_Pi + atan2f(g_ArrProjectiles[projectileIdx].direction.y, g_ArrProjectiles[projectileIdx].direction.x) };
-			g_ArrProjectiles[projectileIdx].position = Point2f{
-				g_ArrProjectiles[projectileIdx].origin.x + g_ArrProjectiles[projectileIdx].direction.x * g_BoomerangSwingRadius + 
-					g_BoomerangSwingRadius * cosf(angle + 2 * g_Pi * g_ArrProjectiles[projectileIdx].timer * 0.001f * g_ArrProjectiles[projectileIdx].speed),
-				g_ArrProjectiles[projectileIdx].origin.y + g_ArrProjectiles[projectileIdx].direction.y * g_BoomerangSwingRadius + 
-					g_BoomerangSwingRadius * sinf(angle + 2 * g_Pi * g_ArrProjectiles[projectileIdx].timer * 0.001f * g_ArrProjectiles[projectileIdx].speed)
-			};
-			break;
-		
-		}
+			case ProjectileBehaviour::Tack:
+			case ProjectileBehaviour::Dart:
+			case ProjectileBehaviour::Crossbow:
+				g_ArrProjectiles[projectileIdx].position = Point2f{
+					g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectiles[projectileIdx].speed * elapsedSec * g_ArrProjectiles[projectileIdx].direction.x,
+					g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectiles[projectileIdx].speed * elapsedSec * g_ArrProjectiles[projectileIdx].direction.y
+				};
+				break;
 
+			case ProjectileBehaviour::Ring:
+				g_ArrProjectiles[projectileIdx].radius += g_ArrProjectiles[projectileIdx].speed * 0.5f * elapsedSec;
+				break;
+
+			case ProjectileBehaviour::Boomerang:
+				const float angle{ g_Pi + atan2f(g_ArrProjectiles[projectileIdx].direction.y, g_ArrProjectiles[projectileIdx].direction.x) };
+				g_ArrProjectiles[projectileIdx].position = Point2f{
+					g_ArrProjectiles[projectileIdx].origin.x + g_ArrProjectiles[projectileIdx].direction.x * g_BoomerangSwingRadius + 
+						g_BoomerangSwingRadius * cosf(angle + 2 * g_Pi * g_ArrProjectiles[projectileIdx].timer * 0.001f * g_ArrProjectiles[projectileIdx].speed),
+					g_ArrProjectiles[projectileIdx].origin.y + g_ArrProjectiles[projectileIdx].direction.y * g_BoomerangSwingRadius + 
+						g_BoomerangSwingRadius * sinf(angle + 2 * g_Pi * g_ArrProjectiles[projectileIdx].timer * 0.001f * g_ArrProjectiles[projectileIdx].speed)
+				};
+				break;
+		}
 
 		for (int bloonIdx = 0; bloonIdx < g_TotalAmountOfBloons; ++bloonIdx) {
 
@@ -961,33 +959,30 @@ void UpdateProjectiles(float elapsedSec)
 				//Necessary to keep the ring type projectile in it's origin place, it's position can't be tied
 				//to it's radius, otherwise it keeps shifting
 				projectileCollider = Circlef{
-			g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectileTextures[g_ArrProjectiles[projectileIdx].spriteId].width * 0.5f,
-			g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectileTextures[g_ArrProjectiles[projectileIdx].spriteId].height * 0.5f,
-			g_ArrProjectiles[projectileIdx].radius
+					g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectileTextures[g_ArrProjectiles[projectileIdx].spriteId].width * 0.5f,
+					g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectileTextures[g_ArrProjectiles[projectileIdx].spriteId].height * 0.5f,
+					g_ArrProjectiles[projectileIdx].radius
 				};
 			}
 			else {
 				projectileCollider = Circlef{
-			g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectiles[projectileIdx].radius * 0.5f,
-			g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectiles[projectileIdx].radius * 0.5f,
-			g_ArrProjectiles[projectileIdx].radius
+					g_ArrProjectiles[projectileIdx].position.x + g_ArrProjectiles[projectileIdx].radius * 0.5f,
+					g_ArrProjectiles[projectileIdx].position.y + g_ArrProjectiles[projectileIdx].radius * 0.5f,
+					g_ArrProjectiles[projectileIdx].radius
 				};
 			}
 
 			const Circlef bloonCollider{
-			g_ArrBloons[bloonIdx].location.x + g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width,
-			g_ArrBloons[bloonIdx].location.y + g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width,
-			g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width * 0.5f
+				g_ArrBloons[bloonIdx].location.x + g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width,
+				g_ArrBloons[bloonIdx].location.y + g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width,
+				g_ArrBloonsTextures[g_ArrBloons[bloonIdx].bloonTextureId].width * 0.5f
 			};
 
 			if (IsOverlapping(projectileCollider, bloonCollider)) {
-				
-				
-				
-				if (g_ArrProjectiles[projectileIdx].maxPierce >0 &&
+				if (g_ArrProjectiles[projectileIdx].maxPierce > 0 &&
 					g_ArrProjectiles[projectileIdx].bloonsPierced < g_ArrProjectiles[projectileIdx].maxPierce
-					&& !IsValueInArray(g_ArrProjectiles[projectileIdx].piercedBloonIds, g_ArrProjectiles[projectileIdx].maxPierce, bloonIdx)
-					) {
+					&& !IsValueInArray(g_ArrProjectiles[projectileIdx].piercedBloonIds, g_ArrProjectiles[projectileIdx].maxPierce, bloonIdx)) 
+				{
 					//Behaviour handling on overlap if projectile can pierce multiple bloons AND hasn't pierced
 					//given bloon before
 					g_Money += g_ArrBloons[bloonIdx].hp;
