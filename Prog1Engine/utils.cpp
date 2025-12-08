@@ -490,6 +490,7 @@ namespace utils
 		glBindTexture(GL_TEXTURE_2D, texture.id);
 		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
+		// Rotate the texture
 		if (rotation != 0)
 		{
 			glMatrixMode(GL_MODELVIEW);

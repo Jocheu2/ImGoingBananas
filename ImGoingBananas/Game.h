@@ -35,16 +35,7 @@ const Point2f g_CellSize{
 //Variables needed to create a path for Bloons to follow
 int g_PathWaypointAmount{ 0 };
 Point2f* g_Path{ new Point2f{} };
-
-//const Point2f g_ArrBloonPath[5]{
-//    Point2f{1.25f * g_CellSize.x, 2.25f * g_CellSize.y},
-//    Point2f{1.25f * g_CellSize.x, 0.25f * g_CellSize.y},
-//    Point2f{3.25f * g_CellSize.x, 0.25f * g_CellSize.y},
-//    Point2f{3.25f * g_CellSize.x, 3.25f * g_CellSize.y},
-//    Point2f{7.25f * g_CellSize.x, 3.25f * g_CellSize.y}
-//};
-
-const Point2f g_SpawnPoint{ 0.f, 2.25f * g_CellSize.y };
+Point2f g_SpawnPoint{};
 
 //Enums
 enum class ProjectileBehaviour
@@ -56,7 +47,6 @@ enum class ProjectileBehaviour
     Ring,
     None
 };
-//Enum for pathingDirection
 enum class Direction {
     up,
     down,
@@ -105,15 +95,26 @@ struct Monkey
     Point2f position{};
     Point2f targetPosition{};
 };
-struct UIMonkeyBuy {
+struct UIButton {
     Texture texture{};
     Rectf rect{};
     bool isHoveringOver{};
-    int cost{};
+};
+struct MonkeyUpgrade
+{
+    int cost{}; // how much does this upgrade cost
+    int damage{}; // increases damage
+    int pierce{}; // increases pierce
+    float radius{}; // increases radius
+    float fireRate{}; // increases fire rate of monkey
+    float speed{}; // increases speed of projectile
+    float lifetime{}; // increases lifetime
+    int swapSpriteId{ -1 }; // Swaps current sprite. Will ignore if set to -1
+    ProjectileBehaviour swapBehaviour{ ProjectileBehaviour::None }; // Swaps current behaviour. Will ignore ProjectileBehaviour::None
 };
 #pragma endregion structs
 
-//Prefabs
+// Prefabs
 //Bloons
 const int g_MinBloonHealth{ 1 };
 const int g_MaxBloonHealth{ 4 };
@@ -277,23 +278,103 @@ const int g_AmountOfProjectiles{ 3 };
 Texture g_ArrProjectileTextures[g_AmountOfProjectiles]{};
 
 //UI
+int g_Money{ 20 };
 Point2f g_MousePosition{};
 bool g_IsUIActive{};
-float g_UIConstantShiftTransition{};
-float g_UIHorizontalOffset{};
+float g_UIShopShiftTransition{};
+float g_UIShopHorizontalOffset{};
 const int g_AmountOfMonkeyBuyButtons{ 3 };
 const int g_FontSize{ 18 };
 Texture g_TextUIBackground{};
-UIMonkeyBuy g_ArrUIMonkeyBuyButtons[g_AmountOfMonkeyBuyButtons]{};
 Texture g_ArrUIMonkeyTextButtons[g_AmountOfMonkeyBuyButtons]{};
+UIButton g_ArrUIMonkeyBuyButtons[g_AmountOfMonkeyBuyButtons]{};
+UIButton g_TextUICloseBtn{};
+UIButton g_TextUIOpenBtn{};
 int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{5, 15, 20}; //temporary fixed values
-int g_Money{ 100 };
+const Color4f g_GrayOutColor{ 0.f, 0.f, 0.f, 0.8f };
+
+Texture g_MoneyIcon{};
+Texture g_ArrNumbers[10]{};
+float g_AverageNumbersHeight{};
+//subection: upgrades
+bool g_IsMonkeySelected{};
+int g_SelectedMonkeyId{};
+Texture g_TextUIUpgradesBackground{};
+UIButton g_ArrBuyUpgradeBtn[2]{};
 
 //Preview Monkey
 bool g_IsPreviewOn{};
 bool g_CanPlaceMonkey{};
 int g_PreviewMonkeyId{};
+float g_UIUpgradeShiftTransition{};
+float g_UIUpgradeHorizontalOffset{};
 Texture g_ArrPreviewMonkeyTextures[g_AmountOfMonkeyTextures * 2]{};
+Texture g_ArrUIUpgradeText[g_AmountOfUpgradesPerMonkey]{};
+
+// Upgrades
+//Dart
+MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
+    MonkeyUpgrade{
+        10,     //cost
+        1,      //damage
+        0,      //pierce
+        2,      //radius
+        0.5f,   //firerate
+        0,      //speed
+        2       //lifetime
+    },
+    MonkeyUpgrade{
+        20,     //cost
+        2,      //damage
+        0,      //pierce
+        1,      //radius
+        0,      //firerate
+        2,      //speed
+        0       //lifetime
+    }
+};
+//Boomerang
+MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
+    MonkeyUpgrade{
+        10,     //cost
+        1,      //damage
+        0,      //pierce
+        2,      //radius
+        0.5f,   //firerate
+        0,      //speed
+        0       //lifetime
+    },
+    MonkeyUpgrade{
+        20,     //cost
+        2,      //damage
+        0,      //pierce
+        1,      //radius
+        0,      //firerate
+        2,      //speed
+        0       //lifetime
+    }
+};
+//Tack
+MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
+    MonkeyUpgrade{
+        10,     //cost
+        1,      //damage
+        0,      //pierce
+        2,      //radius
+        1.f,   //firerate
+        2,      //speed
+        0       //lifetime
+    },
+    MonkeyUpgrade{
+        20,     //cost
+        2,      //damage
+        0,      //pierce
+        1,      //radius
+        2.f,      //firerate
+        2,      //speed
+        0       //lifetime
+    }
+};
 
 //Monkey placing
 int g_MonkeysOnBoard{ 0 };
@@ -312,9 +393,12 @@ void DrawMonkeys();
 void StartWave();
 
 void DrawUI();
-void UpdateUI(float elapsedSec);
+void UpdateUIShopMenu(float elapsedSec);
+void UpdateUIUpgradeMenu(float elapsedSec);
 void UpdateUIButtonCollisions();
 void DrawPreviewMonkey();
+float DrawNumberSequenceTopCenter(int number, const Point2f& topCenter); //returns width
+float DrawNumberSequenceTopLeft(int number, Point2f topLeft); //returns width
 
 void SpawnBloon(const Point2f& spawnPoint, Bloon& bloon, int index);
 void DestroyBloon(Bloon& bloon);
@@ -326,6 +410,7 @@ float GetRand(float start, float end);
 
 Bloon GetBloonFromIndex(int index);
 Monkey GetMonkeyFromIndex(int index);
+MonkeyUpgrade* GetMonkeyUpgradesFromIndex(int index);
 void NormalizeVector(Point2f& vector);
 
 void InitPath();
