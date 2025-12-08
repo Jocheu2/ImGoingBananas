@@ -167,6 +167,7 @@ void Update(float elapsedSec)
 {
 	UpdateUIShopMenu(elapsedSec);
 	UpdateUIUpgradeMenu(elapsedSec);
+	UpdateUINextWave(elapsedSec);
 	UpdateMonkey(elapsedSec);
 	UpdateProjectiles(elapsedSec);
 	UpdateBloons(elapsedSec);
@@ -338,7 +339,6 @@ void OnMouseDownEvent(const SDL_MouseButtonEvent& e)
 
 				g_IsMonkeySelected = true;
 				g_SelectedMonkeyId = i;
-				std::cout << i << std::endl;
 				break;
 			}
 		}
@@ -415,6 +415,11 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 				std::cout << "Not enough funds to upgrade monkey! (" + std::to_string(g_Money) + "$ out of " + std::to_string(upgrade.cost) + "$ needed)\n";
 			}
 		}
+
+		if (g_NextWaveBtn.isHoveringOver) {
+			StartWave();
+		}
+
 	}
 }
 #pragma endregion inputHandling
@@ -536,6 +541,8 @@ void StartWave()
 	int bloonsHpToSpawn{ g_BloonsHpToSpawn };
 	int* arrBloonsToSpawn{ new int[g_AmountOfBloonsTextures] {} };
 	g_TotalAmountOfBloons = 0;
+
+	std::cout << "Wave " << g_CurrentWave << std::endl;
 
 	//Randomness
 	int bloonRandomOffsetFactor{};
@@ -666,6 +673,7 @@ void UpdateBloons(float elapsedSec)
 
 		if (GetDistance(g_ArrBloons[index].location, g_Path[g_PathWaypointAmount - 1]) < g_ArrBloons[index].speed * elapsedSec) {
 			DestroyBloon(g_ArrBloons[index]);
+			--g_AmountActiveBloons;
 		}
 
 		Point2f normalVector{
@@ -1204,10 +1212,10 @@ void DrawUI()
 	}
 
 	//Next wave button
-	if (g_AmountActiveBloons <= 20) {
+	if (g_AmountActiveBloons <= 0) {
 		const Point2f nextWaveTopLeft{
 		g_WindowWidth/2.f - g_NextWaveBtn.rect.width*0.5f,
-		-g_NextWaveVerticallOffset + g_WindowHeight + g_NextWaveBtn.rect.height };
+		-g_NextWaveVerticallOffset + g_WindowHeight };
 		g_NextWaveBtn.rect.top = nextWaveTopLeft.y;
 		g_NextWaveBtn.rect.left = nextWaveTopLeft.x;
 		DrawTexture(g_NextWaveBtn.texture, g_NextWaveBtn.rect);
@@ -1278,18 +1286,19 @@ void UpdateUIUpgradeMenu(float elapsedSec)
 void UpdateUINextWave(float elapsedSec)
 {
 	const float transitionSpeedScalar{ 1.5f };
-	if (g_AmountActiveBloons <= 20) {
-		if ((g_UINextWaveShiftTransition - g_NextWaveBtn.rect.height)) {
+	if (g_AmountActiveBloons <= 0) {
+		if (abs(g_UINextWaveShiftTransition - (g_NextWaveBtn.rect.height))<0.1f) {
 			return;
 		}
 
 		g_UINextWaveShiftTransition += g_NextWaveBtn.rect.height * transitionSpeedScalar * elapsedSec;
-		if (g_UINextWaveShiftTransition < g_NextWaveBtn.rect.height - 50.f) {
-			g_UINextWaveShiftTransition = g_NextWaveBtn.rect.height - 50.f;
+		if (g_UINextWaveShiftTransition > g_NextWaveBtn.rect.height) {
+			g_UINextWaveShiftTransition = g_NextWaveBtn.rect.height;
 		}
 
+		
 		const float t{ g_UINextWaveShiftTransition / g_NextWaveBtn.rect.height };
-		g_NextWaveVerticallOffset = g_NextWaveBtn.rect.height * t;
+		g_NextWaveVerticallOffset = g_NextWaveBtn.rect.height * powf(t,2);
 	}
 	else {
 		g_UINextWaveShiftTransition = 0;
@@ -1328,6 +1337,11 @@ void UpdateUIButtonCollisions()
 	if (IsPointInRect(g_ArrBuyUpgradeBtn[0].rect, g_MousePosition) && g_IsMonkeySelected)
 	{
 		g_ArrBuyUpgradeBtn[0].isHoveringOver = true;
+	}
+
+	g_NextWaveBtn.isHoveringOver = false;
+	if (IsPointInRect(g_NextWaveBtn.rect, g_MousePosition) && g_AmountActiveBloons <= 0) {
+		g_NextWaveBtn.isHoveringOver = true;
 	}
 }
 float DrawNumberSequenceTopCenter(int number, const Point2f& topCenter)

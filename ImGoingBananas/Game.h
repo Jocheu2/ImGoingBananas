@@ -257,7 +257,7 @@ const Monkey boomerangMonkey{
 const Monkey tackShooter{
     2,
     0,
-    Ring,
+    Tack,
     100.f,
     50.f,
     0.5f
@@ -372,12 +372,14 @@ MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
         10,     //cost
         1,      //damage
-        0,      //pierce
+        10,      //pierce
         2,      //radius
         0,      //home radius
         1.f,    //firerate
         2,      //speed
-        0       //lifetime
+        0,       //lifetime
+        -1,
+        ProjectileBehaviour::Ring
     },
     MonkeyUpgrade{
         20,     //cost
