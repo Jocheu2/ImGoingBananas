@@ -108,6 +108,13 @@ void Start()
 	g_ArrBuyUpgradeBtn[1].rect.width = g_ArrBuyUpgradeBtn[1].texture.width;
 	g_ArrBuyUpgradeBtn[1].rect.height = g_ArrBuyUpgradeBtn[1].texture.height;
 
+	if (!TextureFromFile("Resources/UI/sellMonkeyBtn.png", g_SellMonkeyBtn.texture))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+	g_SellMonkeyBtn.rect.width = g_SellMonkeyBtn.texture.width;
+	g_SellMonkeyBtn.rect.height = g_SellMonkeyBtn.texture.height;
+
 	if (!TextureFromFile("Resources/UI/buttonUIClose.png", g_TextUICloseBtn.texture))
 	{
 		std::cout << "ERROR! Failed to load the texture!\n";
@@ -224,6 +231,7 @@ void End()
 	DeleteTexture(g_TextUIOpenBtn.texture);
 	DeleteTexture(g_ArrBuyUpgradeBtn[0].texture);
 	DeleteTexture(g_ArrBuyUpgradeBtn[1].texture);
+	DeleteTexture(g_SellMonkeyBtn.texture);
 	DeleteTexture(g_MoneyIcon);
 	DeleteTexture(g_NextWaveBtn.texture);
 
@@ -398,6 +406,7 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 				(*monkey).fireRate += upgrade.fireRate;
 				(*monkey).detectRadius += upgrade.detectRadius;
 				(*monkey).monkeyUpgradeTier++;
+				(*monkey).moneySpent += upgrade.cost;
 				(*projectile).damage += upgrade.damage;
 				(*projectile).radius += upgrade.radius;
 				(*projectile).homingRadius += upgrade.homeRadius;
@@ -416,6 +425,15 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 			{
 				std::cout << "Not enough funds to upgrade monkey! (" + std::to_string(g_Money) + "$ out of " + std::to_string(upgrade.cost) + "$ needed)\n";
 			}
+		}
+
+		if (g_IsMonkeySelected && g_SellMonkeyBtn.isHoveringOver)
+		{
+			// sell monkey heh
+			g_Money += g_ArrMonkeys[g_SelectedMonkeyId].moneySpent * g_ReturnCostCoefficient;
+			DestroyMonkey(g_SelectedMonkeyId);
+			g_IsMonkeySelected = false;
+			g_SelectedMonkeyId = 0;
 		}
 	}
 }
@@ -709,6 +727,7 @@ void PlaceMonkey(const Point2f& position, const Monkey& monkey)
 	tempArrayMonkey[g_MonkeysOnBoard] = monkey;
 	tempArrayMonkey[g_MonkeysOnBoard].position = position;
 	tempArrayMonkey[g_MonkeysOnBoard].targetPosition = Point2f{ position.x, position.y + 1 };
+	tempArrayMonkey[g_MonkeysOnBoard].moneySpent = g_ArrUIMonkeyPrices[monkey.monkeyId];
 
 	//transfer the arrays
 	++g_MonkeysOnBoard;
@@ -807,6 +826,30 @@ void UpdateMonkey(float elapsedSec)
 
 		}
 	}
+}
+void DestroyMonkey(int monkeyId)
+{
+	// Swap the monkey to delete to the end of the array
+	SwapMonkeysInArray(g_ArrMonkeys[monkeyId], g_ArrMonkeys[g_MonkeysOnBoard - 1]);
+
+	// Make a temporary array
+	Monkey* tempArray{ new Monkey[g_MonkeysOnBoard - 1]{} };
+	
+	for (int i = 0; i < g_MonkeysOnBoard - 1; ++i)
+	{
+		tempArray[i] = g_ArrMonkeys[i];
+	}
+
+	delete[] g_ArrMonkeys;
+	g_ArrMonkeys = tempArray;
+	--g_MonkeysOnBoard;
+	ResizeProjectileArray();
+}
+void SwapMonkeysInArray(Monkey& monkey1, Monkey& monkey2)
+{
+	Monkey temp = monkey1;
+	monkey1 = monkey2;
+	monkey2 = temp;
 }
 
 void InitProjectiles(const Point2f& source, const Point2f& destination, const Projectile& projectile)
@@ -1252,7 +1295,7 @@ void DrawUI()
 
 		const Texture currentUpgradeTexture{ g_ArrUIUpgradeText[g_ArrMonkeys[g_SelectedMonkeyId].monkeyUpgradeTier] };
 		const Point2f currentUpgradeTextTopLeft{ UIUpgradeTopCenter.x - currentUpgradeTexture.width / 2.f,
-			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + currentUpgradeTexture.height };
+			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f };
 		DrawTexture(currentUpgradeTexture, currentUpgradeTextTopLeft);
 
 		UIButton* buyButton{ &g_ArrBuyUpgradeBtn[0] };
@@ -1263,7 +1306,7 @@ void DrawUI()
 		}
 
 		const Point2f buyButtonTopLeft{ UIUpgradeTopCenter.x - (*buyButton).rect.width / 2.f,
-			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + currentUpgradeTexture.height + (*buyButton).rect.height };
+			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + (*buyButton).rect.height };
 		(*buyButton).rect.left = buyButtonTopLeft.x;
 		(*buyButton).rect.top = buyButtonTopLeft.y;
 
@@ -1271,11 +1314,17 @@ void DrawUI()
 
 		int cost{ GetMonkeyUpgradesFromIndex(g_ArrMonkeys[g_SelectedMonkeyId].monkeyId)[g_ArrMonkeys[g_SelectedMonkeyId].monkeyUpgradeTier].cost };
 		const Point2f costTextTopCenter{ UIUpgradeTopCenter.x + g_MoneyIcon.width / 2.f,
-			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + currentUpgradeTexture.height + (*buyButton).rect.height * 2 };
+			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + (*buyButton).rect.height * 2 };
 		const float costTextWidth{ DrawNumberSequenceTopCenter(cost, costTextTopCenter) };
 
 		const Point2f moneyIconTopLeft{ costTextTopCenter.x - g_MoneyIcon.width - costTextWidth, costTextTopCenter.y };
 		DrawTexture(g_MoneyIcon, moneyIconTopLeft);
+
+		const Point2f sellBtnTopLeft{ UIUpgradeTopCenter.x - g_SellMonkeyBtn.rect.width / 2.f,
+			costTextTopCenter.y + g_MoneyIcon.height + g_SellMonkeyBtn.rect.height / 2.f };
+		DrawTexture(g_SellMonkeyBtn.texture, sellBtnTopLeft);
+		g_SellMonkeyBtn.rect.left = sellBtnTopLeft.x;
+		g_SellMonkeyBtn.rect.top = sellBtnTopLeft.y;
 	}
 
 	//Next wave button
@@ -1403,6 +1452,14 @@ void UpdateUIButtonCollisions()
 	if (IsPointInRect(g_ArrBuyUpgradeBtn[0].rect, g_MousePosition) && g_IsMonkeySelected)
 	{
 		g_ArrBuyUpgradeBtn[0].isHoveringOver = true;
+	}
+
+	// Sell button
+	g_SellMonkeyBtn.isHoveringOver = false;
+
+	if (IsPointInRect(g_SellMonkeyBtn.rect, g_MousePosition) && g_IsMonkeySelected)
+	{
+		g_SellMonkeyBtn.isHoveringOver = true;
 	}
 }
 float DrawNumberSequenceTopCenter(int number, const Point2f& topCenter)
