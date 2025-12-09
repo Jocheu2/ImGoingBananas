@@ -725,7 +725,7 @@ void DamageBloon(Bloon& bloon) {
 
 void PlaceMonkey(const Point2f& position, const Monkey& monkey)
 {
-	Monkey* tempArrayMonkey = new Monkey[g_MonkeysOnBoard + 1]{};
+	Monkey* tempArrayMonkey{ new Monkey[g_MonkeysOnBoard + 1]{} };
 
 	//copies projectiles and monkeys on board to a new array so we can raise the max amount of them on board
 	for (int index = 0; index < g_MonkeysOnBoard; ++index) {
@@ -906,6 +906,14 @@ void InitProjectiles(const Point2f& source, const Point2f& destination, const Pr
 			};
 
 			newProjectile.direction = directionVector;
+
+			if (newProjectile.maxPierce > 0) {
+				newProjectile.piercedBloonIds = new int[newProjectile.maxPierce] {};
+				for (int index = 0; index < newProjectile.maxPierce; ++index) {
+					newProjectile.piercedBloonIds[index] = -1;
+				}
+			}
+
 			g_ArrProjectiles[g_ProjectilesOnBoardAmount] = newProjectile;
 			++g_ProjectilesOnBoardAmount;
 			tackAngle += 2.f * g_Pi / g_TackCount;
