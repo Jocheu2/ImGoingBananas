@@ -458,8 +458,8 @@ void InitPath()
 			if (g_BoardGrid[row * g_Cols + col] == -1) {
 				currentRow = row;
 				currentColumn = col;
-				tempPath[currentPointIndex] = Point2f{ (currentColumn) * (g_CellSize.x) + g_CellSize.x ,
-				currentRow * (g_CellSize.y) };
+				tempPath[currentPointIndex] = Point2f{ (currentColumn) * (g_CellSize.x) + g_CellSize.x*0.75f ,
+				currentRow * (g_CellSize.y) - g_CellSize.y * 0.25f };
 
 				// set bloons spawn point
 				g_SpawnPoint = Point2f{ 0, tempPath[currentPointIndex].y };
@@ -478,8 +478,8 @@ void InitPath()
 			g_CurrentPathDirection != Direction::left)
 		{
 			++currentColumn;
-			tempPath[currentPointIndex] = Point2f{ currentColumn * (g_CellSize.x) ,
-				currentRow * (g_CellSize.y) };
+			tempPath[currentPointIndex] = Point2f{ currentColumn * (g_CellSize.x) - g_CellSize.x*0.25f ,
+				currentRow * (g_CellSize.y) - g_CellSize.y*0.25f };
 			++currentPointIndex;
 			++g_PathWaypointAmount;
 			g_CurrentPathDirection = Direction::right;
@@ -489,8 +489,8 @@ void InitPath()
 			g_CurrentPathDirection != Direction::right)
 		{
 			--currentColumn;
-			tempPath[currentPointIndex] = Point2f{ currentColumn * (g_CellSize.x) ,
-				currentRow * (g_CellSize.y) };
+			tempPath[currentPointIndex] = Point2f{ currentColumn * (g_CellSize.x) - g_CellSize.x * 0.25f ,
+				currentRow * (g_CellSize.y) - g_CellSize.y * 0.25f };
 			++currentPointIndex;
 			++g_PathWaypointAmount;
 			g_CurrentPathDirection = Direction::left;
@@ -499,8 +499,8 @@ void InitPath()
 			g_BoardGrid[(currentRow - 1) * g_Cols + currentColumn] != 0 &&
 			g_CurrentPathDirection != Direction::down) {
 			--currentRow;
-			tempPath[currentPointIndex] = Point2f{ currentColumn * (g_CellSize.x) ,
-				currentRow * (g_CellSize.y) };
+			tempPath[currentPointIndex] = Point2f{ currentColumn * (g_CellSize.x) - g_CellSize.x * 0.25f ,
+				currentRow * (g_CellSize.y) - g_CellSize.y * 0.25f };
 			++currentPointIndex;
 			++g_PathWaypointAmount;
 			g_CurrentPathDirection = Direction::up;
@@ -509,13 +509,12 @@ void InitPath()
 			g_BoardGrid[(currentRow + 1) * g_Cols + currentColumn] != 0 &&
 			g_CurrentPathDirection != Direction::up) {
 			++currentRow;
-			tempPath[currentPointIndex] = Point2f{ currentColumn * (g_CellSize.x) ,
-				currentRow * (g_CellSize.y) };
+			tempPath[currentPointIndex] = Point2f{ currentColumn * (g_CellSize.x) - g_CellSize.x * 0.25f ,
+				currentRow * (g_CellSize.y) - g_CellSize.y * 0.25f };
 			++currentPointIndex;
 			++g_PathWaypointAmount;
 			g_CurrentPathDirection = Direction::down;
 		}
-
 	}
 
 	delete[] g_Path;
@@ -558,7 +557,8 @@ void StartWave()
 {
 	++g_CurrentWave;
 	delete[] g_ArrBloons;
-	int bloonsHpToSpawn{ g_BloonsHpToSpawn };
+	int bloonsHpToSpawn{static_cast<int>( ceil(30 + pow(2 * g_CurrentWave,1.5f))) };
+	std::cout << bloonsHpToSpawn << std::endl;
 	int* arrBloonsToSpawn{ new int[g_AmountOfBloonsTextures] {} };
 	g_TotalAmountOfBloons = 0;
 
@@ -635,6 +635,7 @@ void StartWave()
 			--arrBloonsToSpawn[textureIndex];
 		}
 	}
+	
 	g_AmountActiveBloons = g_TotalAmountOfBloons;
 	delete[] arrBloonsToSpawn;
 }
@@ -668,9 +669,9 @@ void DrawBloons()
 		};
 
 		utils::DrawTexture(g_ArrBloonsTextures[g_ArrBloons[index].bloonTextureId], drawLocation);
-		/*utils::DrawEllipse(bloonCollider.center, bloonCollider. radius, bloonCollider.radius);
+		utils::DrawEllipse(bloonCollider.center, bloonCollider. radius, bloonCollider.radius);
 		utils::FillEllipse(drawLocation, 5.f, 5.f);
-		utils::FillEllipse(bloonCollider.center, 5.f, 5.f);*/
+		utils::FillEllipse(bloonCollider.center, 5.f, 5.f);
 	}
 }
 void UpdateBloons(float elapsedSec)
@@ -1110,8 +1111,8 @@ void UpdateProjectiles(float elapsedSec)
 				hitBloon = true;
 
 				if (g_ArrProjectiles[projectileIdx].maxPierce > 0 &&
-					g_ArrProjectiles[projectileIdx].bloonsPierced < g_ArrProjectiles[projectileIdx].maxPierce
-					&& !IsValueInArray(g_ArrProjectiles[projectileIdx].piercedBloonIds, g_ArrProjectiles[projectileIdx].maxPierce, bloonIdx))
+					g_ArrProjectiles[projectileIdx].bloonsPierced < g_ArrProjectiles[projectileIdx].maxPierce &&
+					!IsValueInArray(g_ArrProjectiles[projectileIdx].piercedBloonIds, g_ArrProjectiles[projectileIdx].maxPierce, bloonIdx))
 				{
 					//Behaviour handling on overlap if projectile can pierce multiple bloons AND hasn't pierced
 					//given bloon before
@@ -1122,8 +1123,7 @@ void UpdateProjectiles(float elapsedSec)
 					continue;
 				}
 				else if (g_ArrProjectiles[projectileIdx].maxPierce > 0 &&
-					IsValueInArray(g_ArrProjectiles[projectileIdx].piercedBloonIds, g_ArrProjectiles[projectileIdx].maxPierce, bloonIdx) &&
-					g_ArrProjectiles[projectileIdx].bloonsPierced < g_ArrProjectiles[projectileIdx].maxPierce) 
+					IsValueInArray(g_ArrProjectiles[projectileIdx].piercedBloonIds, g_ArrProjectiles[projectileIdx].maxPierce, bloonIdx)) 
 				{
 					//Behaviour handling on overlap if projectile can pierce multiple bloons AND hasn't pierced
 					//given bloon before
@@ -1137,6 +1137,7 @@ void UpdateProjectiles(float elapsedSec)
 					DeletePiercedBloonIds(g_ArrProjectiles[projectileIdx]);
 					SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 					DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+					break;
 				}
 
 				break;

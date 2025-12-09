@@ -20,12 +20,14 @@ const float g_Rad2Deg{ 180.f / g_Pi };
 const float g_Deg2Rad{ g_Pi / 180.f };
 
 //Grid
-int const g_Cols{ 5 }, g_Rows{ 4 };
+int const g_Cols{ 8 }, g_Rows{ 6 };
 int g_BoardGrid[g_Cols * g_Rows]{
-    0,1,1,1,0 ,
-    0,1,0,1,0,
-    -1,1,0,1,0,
-    0,0,0,1,2 };
+    0,1,1,1,0,0,0,0 ,
+    0,1,0,1,1,1,1,0,
+    0,1,0,0,0,0,1,0,
+    0,1,0,1,1,1,1,0,
+    -1,1,0,1,0,0,0,0,
+    0,0,0,1,1,1,1,2 };
 
 const Point2f g_CellSize{
     g_WindowWidth / g_Cols,
@@ -75,11 +77,11 @@ struct Projectile
     float speed{};
     float timer{}; // in ms
     float lifetime{}; // in ms
-    int maxPierce{};
+    int maxPierce{-1};
     ProjectileBehaviour behaviour{};
     float homingRadius{}; // for homing projectiles
     int homingBloonId{ -1 };
-    int bloonsPierced{};
+    int bloonsPierced{0};
     int* piercedBloonIds{ nullptr };
     Point2f origin{};
     Point2f position{};
@@ -175,7 +177,7 @@ const Projectile Dart{
     200.f,
     0,
     800.f,
-    1,
+    0,
     ProjectileBehaviour::Dart
 };
 const float g_BoomerangSwingRadius{ 80.f };
@@ -187,7 +189,7 @@ const Projectile Boomerang{
     g_BoomerangSpeed / g_BoomerangSwingRadius, //radiants per second
     0,
     g_BoomerangSwingRadius * 2 * g_BoomerangSwingRadius / g_BoomerangSpeed * 2 * g_Pi,
-    1,
+    0,
     ProjectileBehaviour::Boomerang
 };
 const int g_TackCount{ 8 };
@@ -198,7 +200,7 @@ const Projectile Tack{
     200.f, //pixels per second
     0,
     800.f,
-    1,
+    0,
     ProjectileBehaviour::Tack
 };
 const int crossbowPierce{ 5 }; //Amount of bloons that can be pierced by crossbow
@@ -265,7 +267,7 @@ const Monkey tackShooter{
     Tack,
     100.f,
     50.f,
-    0.5f
+    0.25f
 };
 
 //Wave
@@ -297,7 +299,7 @@ Texture g_ArrUIMonkeyTextButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_ArrUIMonkeyBuyButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_TextUICloseBtn{};
 UIButton g_TextUIOpenBtn{};
-int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{5, 15, 20}; //temporary fixed values
+int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{10, 20, 40}; //temporary fixed values
 const Color4f g_GrayOutColor{ 0.f, 0.f, 0.f, 0.8f };
 
 Texture g_MoneyIcon{};
@@ -332,9 +334,9 @@ float g_UINextWaveShiftTransition{};
 //Dart
 MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        10,     //cost
-        1,      //damage
-        0,      //pierce
+        15,     //cost
+        0,      //damage
+        1,      //pierce
         2,      //radius
         0,      //detect radius
         0,      //home radius
@@ -343,9 +345,9 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         2       //lifetime
     },
     MonkeyUpgrade{
-        20,     //cost
+        30,     //cost
         2,      //damage
-        0,      //pierce
+        4,      //pierce
         1,      //radius
         0,      //detect radius
         0,      //home radius
@@ -357,53 +359,53 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
 //Boomerang
 MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        10,     //cost
-        2,      //damage
+        25,     //cost
+        0,      //damage
         5,      //pierce
         5,      //radius
         50,     //detect radius
         200,    //home radius
         0.1f,      //firerate
         300,      //speed
-        1000,       //lifetime
+        0,       //lifetime
         -1,
         ProjectileBehaviour::HomingBoomerang
     },
     MonkeyUpgrade{
-        20,     //cost
-        3,      //damage
+        40,     //cost
+        1,      //damage
         7,      //pierce
         1,      //radius
         0,      //detect radius
         100,      //home radius
         1.f,      //firerate
         200,      //speed
-        2000,       //lifetime
+        200,       //lifetime
     }
 };
 //Tack
 MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        10,     //cost
-        1,      //damage
+        40,     //cost
+        0,      //damage
         10,      //pierce
         2,      //radius
         0,      //detect radius
         0,      //home radius
-        1.f,    //firerate
+        0.25f,    //firerate
         2,      //speed
         0,       //lifetime
         -1,
         ProjectileBehaviour::Ring
     },
     MonkeyUpgrade{
-        20,     //cost
+        60,     //cost
         2,      //damage
         0,      //pierce
         1,      //radius
         0,      //detect radius
         0,      //home radius
-        2.f,    //firerate
+        0.5f,    //firerate
         2,      //speed
         0       //lifetime
     }
