@@ -180,7 +180,7 @@ const Projectile Dart{
     0,
     ProjectileBehaviour::Dart
 };
-const float g_BoomerangSwingRadius{ 80.f };
+const float g_BoomerangSwingRadius{ g_CellSize.x * 0.75f };
 const float g_BoomerangSpeed{ 100.f }; //pixels per second
 const Projectile Boomerang{
     1,
@@ -340,7 +340,7 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         2,      //radius
         0,      //detect radius
         0,      //home radius
-        0.5f,   //firerate
+        0.25f,   //firerate
         0,      //speed
         2       //lifetime
     },
