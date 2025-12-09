@@ -124,7 +124,7 @@ struct MonkeyUpgrade
 // Prefabs
 //Bloons
 const int g_MinBloonHealth{ 1 };
-const int g_MaxBloonHealth{ 4 };
+const int g_MaxBloonHealth{ 6 };
 
 #pragma region BloonTypes
 const Bloon redBloon{
@@ -132,7 +132,7 @@ const Bloon redBloon{
     0,
     1,
     0,
-    50.f,
+    75.f,
     Point2f{}
 };
 const Bloon blueBloon{
@@ -148,7 +148,7 @@ const Bloon greenBloon{
     0,
     1,
     2,
-    20.f,
+    150.f,
     Point2f{}
 };
 const Bloon yellowBloon{
@@ -156,7 +156,23 @@ const Bloon yellowBloon{
     0,
     1,
     3,
-    20.f,
+    100.f,
+    Point2f{}
+};
+const Bloon pinkBloon1{
+    5,
+    0,
+    1,
+    4,
+    100.f,
+    Point2f{}
+};
+const Bloon pinkBloon2{
+    6,
+    0,
+    1,
+    4,
+    100.f,
     Point2f{}
 };
 const Bloon nullBloon{
@@ -180,7 +196,7 @@ const Projectile Dart{
     0,
     ProjectileBehaviour::Dart
 };
-const float g_BoomerangSwingRadius{ g_CellSize.x * 0.75f };
+const float g_BoomerangSwingRadius{ g_CellSize.x * 0.5f };
 const float g_BoomerangSpeed{ 100.f }; //pixels per second
 const Projectile Boomerang{
     1,

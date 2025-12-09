@@ -568,15 +568,23 @@ void StartWave()
 	int bloonRandomOffsetFactor{};
 	int maxTierOfBloon{};
 
-	if (g_CurrentWave < 6)
+	if (g_CurrentWave < 3)
 	{
 		bloonRandomOffsetFactor = 0;
 		maxTierOfBloon = 2;
 	}
-	else if (g_CurrentWave < 11)
+	else if (g_CurrentWave < 6)
 	{
+		bloonRandomOffsetFactor = 0;
+		maxTierOfBloon = 3;
+	}
+	else if (g_CurrentWave < 8) {
 		bloonRandomOffsetFactor = 1;
-		maxTierOfBloon = 4;
+		maxTierOfBloon = 3;
+	}
+	else {
+		bloonRandomOffsetFactor = 1;
+		maxTierOfBloon = 5;
 	}
 
 	while (bloonsHpToSpawn > 0)
@@ -1194,6 +1202,12 @@ Bloon GetBloonFromIndex(int index)
 			break;
 		case 3:
 			return yellowBloon;
+			break;
+		case 4:
+			return pinkBloon1;
+			break;
+		case 5:
+			return pinkBloon2;
 			break;
 		default:
 			std::cout << "Incorrent Bloon Index\n";
