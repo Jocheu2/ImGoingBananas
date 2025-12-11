@@ -159,16 +159,8 @@ const Bloon yellowBloon{
     100.f,
     Point2f{}
 };
-const Bloon pinkBloon1{ //Wanted to try a concept where a bloon tier has 2 hp
+const Bloon pinkBloon{ //Wanted to try a concept where a bloon tier has 2 hp
     5,
-    0,
-    1,
-    4,
-    100.f,
-    Point2f{}
-};
-const Bloon pinkBloon2{
-    6,
     0,
     1,
     4,
@@ -199,7 +191,7 @@ const Projectile Dart{
 const float g_BoomerangSwingRadius{ g_CellSize.x * 0.5f };
 const float g_BoomerangSpeed{ 100.f }; //pixels per second
 const Projectile Boomerang{
-    1,
+    3,
     1,
     20,
     g_BoomerangSpeed / g_BoomerangSwingRadius, //radiants per second
@@ -210,7 +202,7 @@ const Projectile Boomerang{
 };
 const int g_TackCount{ 8 };
 const Projectile Tack{
-    2,
+    6,
     1,
     20,
     200.f, //pixels per second
@@ -260,6 +252,8 @@ const Projectile nullProjectile{
     Point2f{}
 };
 
+const float g_ProjectileOutOfTheMapGraceDistance{ 50.f }; //distance a projectile needs to travel out of the screen to get deleted
+
 //Monkeys
 const Monkey dartMonkey{
     0,
@@ -299,8 +293,11 @@ Texture g_ArrBloonsTextures[g_AmountOfBloonsTextures]{};
 const int g_AmountOfMonkeyTextures{ 3 };
 const int g_AmountOfUpgradesPerMonkey{ 3 };
 Texture g_ArrMonkeyTextures[g_AmountOfMonkeyTextures * g_AmountOfUpgradesPerMonkey]{};
-const int g_AmountOfProjectiles{ 3 };
+const int g_AmountOfProjectiles{ 7 };
 Texture g_ArrProjectileTextures[g_AmountOfProjectiles]{};
+//subsection: rescale
+const int g_CurrentTextPixelSize{ 10 };
+const int g_RescaledTextPixelSize{ 7 };
 
 //UI
 int g_Money{ 200 };
@@ -310,7 +307,7 @@ float g_UIShopShiftTransition{};
 float g_UIShopHorizontalOffset{};
 const int g_AmountOfMonkeyBuyButtons{ 3 };
 const int g_FontSize{ 18 };
-Texture g_TextUIBackground{};
+float g_UIBackgroundWidth{ 185 };
 Texture g_ArrUIMonkeyTextButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_ArrUIMonkeyBuyButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_TextUICloseBtn{};
@@ -322,9 +319,9 @@ Texture g_MoneyIcon{};
 Texture g_ArrNumbers[10]{};
 float g_AverageNumbersHeight{};
 //subection: upgrades
+const float g_UpgradesBGHeight{ 300 };
 bool g_IsMonkeySelected{};
 int g_SelectedMonkeyId{};
-Texture g_TextUIUpgradesBackground{};
 UIButton g_ArrBuyUpgradeBtn[2]{};
 //subection: selling
 const float g_ReturnCostCoefficient{ 0.6f };
@@ -360,7 +357,8 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         0,      //home radius
         0.25f,   //firerate
         0,      //speed
-        2       //lifetime
+        2,       //lifetime
+        1
     },
     MonkeyUpgrade{
         50,     //cost
@@ -371,7 +369,8 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         0,      //home radius
         0,      //firerate
         2,      //speed
-        0       //lifetime
+        0,       //lifetime
+        2
     }
 };
 //Boomerang
@@ -386,7 +385,7 @@ MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         0.1f,      //firerate
         300,      //speed
         200,       //lifetime
-        -1,
+        4,
         ProjectileBehaviour::HomingBoomerang
     },
     MonkeyUpgrade{
@@ -399,6 +398,7 @@ MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         1.f,      //firerate
         200,      //speed
         200,       //lifetime
+        5
     }
 };
 //Tack
@@ -412,9 +412,7 @@ MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         0,      //home radius
         0.25f,    //firerate
         2,      //speed
-        0,       //lifetime
-        -1,
-        ProjectileBehaviour::Ring
+        0       //lifetime
     },
     MonkeyUpgrade{
         80,     //cost
@@ -425,7 +423,9 @@ MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         0,      //home radius
         0.25f,    //firerate
         2,      //speed
-        0       //lifetime
+        0,       //lifetime
+        -1,
+        ProjectileBehaviour::Ring
     }
 };
 
