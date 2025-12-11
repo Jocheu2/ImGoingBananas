@@ -81,6 +81,8 @@ void Start()
 		std::cout << "ERROR! Failed to load the texture!\n";
 	}if (!TextureFromFile("Resources/UI/nextWave.png", g_NextWaveBtn.texture)) {
 		std::cout << "ERROR! Failed to load the texture!\n";
+	}if (!TextureFromFile("Resources/UI/nextWave02.png", g_NextWaveBtn2)) {
+		std::cout << "ERROR! Failed to load the texture!\n";
 	}
 	g_NextWaveBtn.rect.width = g_NextWaveBtn.texture.width;
 	g_NextWaveBtn.rect.height = g_NextWaveBtn.texture.height;
@@ -235,6 +237,7 @@ void End()
 	DeleteTexture(g_SellMonkeyBtn.texture);
 	DeleteTexture(g_MoneyIcon);
 	DeleteTexture(g_NextWaveBtn.texture);
+	DeleteTexture(g_NextWaveBtn2);
 
 	delete[] g_ArrMonkeys;
 	delete[] g_ArrBloons;
@@ -568,15 +571,23 @@ void StartWave()
 	int bloonRandomOffsetFactor{};
 	int maxTierOfBloon{};
 
-	if (g_CurrentWave < 6)
+	if (g_CurrentWave < 3)
 	{
 		bloonRandomOffsetFactor = 0;
 		maxTierOfBloon = 2;
 	}
-	else if (g_CurrentWave < 11)
+	else if (g_CurrentWave < 6)
 	{
+		bloonRandomOffsetFactor = 0;
+		maxTierOfBloon = 3;
+	}
+	else if (g_CurrentWave < 8) {
 		bloonRandomOffsetFactor = 1;
-		maxTierOfBloon = 4;
+		maxTierOfBloon = 3;
+	}
+	else {
+		bloonRandomOffsetFactor = 1;
+		maxTierOfBloon = 5;
 	}
 
 	while (bloonsHpToSpawn > 0)
@@ -638,6 +649,13 @@ void StartWave()
 	
 	g_AmountActiveBloons = g_TotalAmountOfBloons;
 	delete[] arrBloonsToSpawn;
+
+	//Determines if a secret new wave button appears this wave
+	g_AlternateBuyButtonOn = false;
+	if (rand() % 20 == 0) {
+		std::cout << "Secret, shhh" << std::endl;
+		g_AlternateBuyButtonOn = true;
+	}
 }
 
 void SpawnBloon(const Point2f& spawnPoint, Bloon& bloon, int index)
@@ -1195,6 +1213,12 @@ Bloon GetBloonFromIndex(int index)
 		case 3:
 			return yellowBloon;
 			break;
+		case 4:
+			return pinkBloon1;
+			break;
+		case 5:
+			return pinkBloon2;
+			break;
 		default:
 			std::cout << "Incorrent Bloon Index\n";
 			return redBloon;
@@ -1351,7 +1375,13 @@ void DrawUI()
 		-g_NextWaveVerticallOffset + g_WindowHeight };
 		g_NextWaveBtn.rect.top = nextWaveTopLeft.y;
 		g_NextWaveBtn.rect.left = nextWaveTopLeft.x;
-		DrawTexture(g_NextWaveBtn.texture, g_NextWaveBtn.rect);
+		if (g_AlternateBuyButtonOn == true) {
+			DrawTexture(g_NextWaveBtn2, g_NextWaveBtn.rect);
+		}
+		else {
+			DrawTexture(g_NextWaveBtn.texture, g_NextWaveBtn.rect);
+		}
+		
 	}
 }
 void UpdateUIShopMenu(float elapsedSec)

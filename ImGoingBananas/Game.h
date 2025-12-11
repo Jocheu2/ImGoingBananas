@@ -124,7 +124,7 @@ struct MonkeyUpgrade
 // Prefabs
 //Bloons
 const int g_MinBloonHealth{ 1 };
-const int g_MaxBloonHealth{ 4 };
+const int g_MaxBloonHealth{ 6 };
 
 #pragma region BloonTypes
 const Bloon redBloon{
@@ -132,7 +132,7 @@ const Bloon redBloon{
     0,
     1,
     0,
-    50.f,
+    75.f,
     Point2f{}
 };
 const Bloon blueBloon{
@@ -148,7 +148,7 @@ const Bloon greenBloon{
     0,
     1,
     2,
-    20.f,
+    150.f,
     Point2f{}
 };
 const Bloon yellowBloon{
@@ -156,7 +156,23 @@ const Bloon yellowBloon{
     0,
     1,
     3,
-    20.f,
+    100.f,
+    Point2f{}
+};
+const Bloon pinkBloon1{ //Wanted to try a concept where a bloon tier has 2 hp
+    5,
+    0,
+    1,
+    4,
+    100.f,
+    Point2f{}
+};
+const Bloon pinkBloon2{
+    6,
+    0,
+    1,
+    4,
+    100.f,
     Point2f{}
 };
 const Bloon nullBloon{
@@ -180,7 +196,7 @@ const Projectile Dart{
     0,
     ProjectileBehaviour::Dart
 };
-const float g_BoomerangSwingRadius{ 80.f };
+const float g_BoomerangSwingRadius{ g_CellSize.x * 0.5f };
 const float g_BoomerangSpeed{ 100.f }; //pixels per second
 const Projectile Boomerang{
     1,
@@ -287,7 +303,7 @@ const int g_AmountOfProjectiles{ 3 };
 Texture g_ArrProjectileTextures[g_AmountOfProjectiles]{};
 
 //UI
-int g_Money{ 20 };
+int g_Money{ 200 };
 Point2f g_MousePosition{};
 bool g_IsUIActive{};
 float g_UIShopShiftTransition{};
@@ -299,7 +315,7 @@ Texture g_ArrUIMonkeyTextButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_ArrUIMonkeyBuyButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_TextUICloseBtn{};
 UIButton g_TextUIOpenBtn{};
-int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{10, 20, 40}; //temporary fixed values
+int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{10, 30, 50}; //temporary fixed values
 const Color4f g_GrayOutColor{ 0.f, 0.f, 0.f, 0.8f };
 
 Texture g_MoneyIcon{};
@@ -325,6 +341,8 @@ Texture g_ArrUIUpgradeText[g_AmountOfUpgradesPerMonkey]{};
 
 //Next wave button
 UIButton g_NextWaveBtn{};
+Texture g_NextWaveBtn2{};
+bool g_AlternateBuyButtonOn{ false };
 float g_NextWaveVerticallOffset{};
 float g_UINextWaveShiftTransition{};
 
@@ -340,14 +358,14 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         2,      //radius
         0,      //detect radius
         0,      //home radius
-        0.5f,   //firerate
+        0.25f,   //firerate
         0,      //speed
         2       //lifetime
     },
     MonkeyUpgrade{
-        30,     //cost
-        2,      //damage
-        4,      //pierce
+        50,     //cost
+        1,      //damage
+        2,      //pierce
         1,      //radius
         0,      //detect radius
         0,      //home radius
@@ -359,7 +377,7 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
 //Boomerang
 MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        25,     //cost
+        40,     //cost
         0,      //damage
         5,      //pierce
         5,      //radius
@@ -367,12 +385,12 @@ MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         200,    //home radius
         0.1f,      //firerate
         300,      //speed
-        0,       //lifetime
+        200,       //lifetime
         -1,
         ProjectileBehaviour::HomingBoomerang
     },
     MonkeyUpgrade{
-        40,     //cost
+        60,     //cost
         1,      //damage
         7,      //pierce
         1,      //radius
@@ -386,7 +404,7 @@ MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
 //Tack
 MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        40,     //cost
+        50,     //cost
         0,      //damage
         10,      //pierce
         2,      //radius
@@ -399,13 +417,13 @@ MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         ProjectileBehaviour::Ring
     },
     MonkeyUpgrade{
-        60,     //cost
+        80,     //cost
         2,      //damage
         0,      //pierce
         1,      //radius
         0,      //detect radius
         0,      //home radius
-        0.5f,    //firerate
+        0.25f,    //firerate
         2,      //speed
         0       //lifetime
     }
