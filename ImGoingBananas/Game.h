@@ -138,7 +138,7 @@ const Bloon redBloon{
 const Bloon blueBloon{
     2,
     0,
-    1,
+    2,
     1,
     125.f,
     Point2f{}
@@ -146,7 +146,7 @@ const Bloon blueBloon{
 const Bloon greenBloon{
     3,
     0,
-    1,
+    2,
     2,
     150.f,
     Point2f{}
@@ -154,25 +154,49 @@ const Bloon greenBloon{
 const Bloon yellowBloon{
     4,
     0,
-    1,
+    3,
     3,
     150.f,
     Point2f{}
 };
-const Bloon pinkBloon1{ //Wanted to try a concept where a bloon tier has 2 hp
+const Bloon pinkBloon{ //Wanted to try a concept where a bloon tier has 2 hp
     5,
     0,
-    1,
+    3,
     4,
-    100.f,
+    175.f,
     Point2f{}
 };
-const Bloon pinkBloon2{
+const Bloon whiteBloon{
     6,
     0,
-    1,
     4,
-    100.f,
+    5,
+    150.f,
+    Point2f{}
+};
+const Bloon blackBloon{
+    7,
+    0,
+    4,
+    6,
+    150.f,
+    Point2f{}
+};
+const Bloon zebraBloon{
+    8,
+    0,
+    4,
+    7,
+    175.f,
+    Point2f{}
+};
+const Bloon gayBloon{
+    9,
+    0,
+    5,
+    8,
+    200.f,
     Point2f{}
 };
 const Bloon nullBloon{
@@ -190,7 +214,7 @@ const Projectile Dart{
     0,
     1,
     20,
-    200.f,
+    250.f,
     0,
     800.f,
     0,
