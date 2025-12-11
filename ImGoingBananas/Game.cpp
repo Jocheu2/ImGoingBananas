@@ -156,7 +156,8 @@ void Start()
 	std::cout << "\033[33m Welcome to 'I'm going Bananas! Your goal is to not let any of bloons on board reach your base\n";
 	std::cout << "You can open menu to buy monkeys by pressing the 'TAB' key. Don't forget to keep enough money for it!\n";
 	std::cout << "You may upgrade by selecting a monkey already on field and pressing UPGRAGE button!\n";
-	std::cout << "You may also sell the monkey to refund a part of the cost and free up the space!\n";
+	std::cout << "You may also sell the monkey to refund a part of the cost and free up the space on board!\n";
+	std::cout << "Good luck \n\n This Project was Developed by The Them \033[0m\n";
 
 	InitPath();
 	StartWave();
@@ -597,23 +598,31 @@ void StartWave()
 	int bloonRandomOffsetFactor{};
 	int maxTierOfBloon{};
 
-	if (g_CurrentWave < 3)
+	if (g_CurrentWave <= 3)
 	{
 		bloonRandomOffsetFactor = 1;
 		maxTierOfBloon = 2;
 	}
-	else if (g_CurrentWave < 6)
+	else if (g_CurrentWave <= 6)
 	{
 		bloonRandomOffsetFactor = 2;
 		maxTierOfBloon = 3;
 	}
-	else if (g_CurrentWave < 8) {
+	else if (g_CurrentWave <= 8) {
 		bloonRandomOffsetFactor = 1;
 		maxTierOfBloon = 3;
 	}
-	else {
-		bloonRandomOffsetFactor = 1;
+	else if (g_CurrentWave <= 10) {
+		bloonRandomOffsetFactor = 2;
+		maxTierOfBloon = 4;
+	}
+	else if (g_CurrentWave <= 12) {
+		bloonRandomOffsetFactor = 3;
 		maxTierOfBloon = 5;
+	}
+	else {
+		bloonRandomOffsetFactor = 8;
+		maxTierOfBloon = 9;
 	}
 
 	while (bloonsHpToSpawn > 0)
@@ -767,7 +776,6 @@ void UpdateBloons(float elapsedSec)
 
 		if (GetDistance(g_ArrBloons[index].location, g_Path[g_PathWaypointAmount - 1]) < g_ArrBloons[index].speed * elapsedSec) {
 			g_PlayerHp -= floor(pow(g_ArrBloons[index].hp, 0.66f));
-			std::cout << g_PlayerHp << std::endl;
 			DestroyBloon(g_ArrBloons[index]);
 			--g_AmountActiveBloons;
 		}
@@ -1199,7 +1207,7 @@ void UpdateProjectiles(float elapsedSec)
 				{
 					//Behaviour handling on overlap if projectile can pierce multiple bloons AND hasn't pierced
 					//given bloon before
-					g_Money += g_ArrBloons[bloonIdx].hp;
+					g_Money += g_ArrBloons[bloonIdx].moneyDropped;
 					g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
 					g_ArrProjectiles[projectileIdx].piercedBloonIds[g_ArrProjectiles[projectileIdx].bloonsPierced] = bloonIdx;
 					++g_ArrProjectiles[projectileIdx].bloonsPierced;
@@ -1215,7 +1223,7 @@ void UpdateProjectiles(float elapsedSec)
 				else 
 				{
 					//Default projectile behaviour on hit or once crossbow projectile pierces it's max amount of bloons
-					g_Money += g_ArrBloons[bloonIdx].hp;
+					g_Money += g_ArrBloons[bloonIdx].moneyDropped;
 					g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
 					DeletePiercedBloonIds(g_ArrProjectiles[projectileIdx]);
 					SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
@@ -1271,10 +1279,19 @@ Bloon GetBloonFromIndex(int index)
 			return yellowBloon;
 			break;
 		case 4:
-			return pinkBloon1;
+			return pinkBloon;
 			break;
 		case 5:
-			return pinkBloon2;
+			return whiteBloon;
+			break;
+		case 6:
+			return blackBloon;
+			break;
+		case 7:
+			return zebraBloon;
+			break;
+		case 8:
+			return gayBloon;
 			break;
 		default:
 			std::cout << "Incorrent Bloon Index\n";
