@@ -140,7 +140,7 @@ const Bloon blueBloon{
     0,
     1,
     1,
-    100.f,
+    125.f,
     Point2f{}
 };
 const Bloon greenBloon{
@@ -156,7 +156,7 @@ const Bloon yellowBloon{
     0,
     1,
     3,
-    100.f,
+    150.f,
     Point2f{}
 };
 const Bloon pinkBloon1{ //Wanted to try a concept where a bloon tier has 2 hp
@@ -304,6 +304,7 @@ Texture g_ArrProjectileTextures[g_AmountOfProjectiles]{};
 
 //UI
 int g_Money{ 200 };
+int g_PlayerHp{ 10 };
 Point2f g_MousePosition{};
 bool g_IsUIActive{};
 float g_UIShopShiftTransition{};
@@ -317,6 +318,8 @@ UIButton g_TextUICloseBtn{};
 UIButton g_TextUIOpenBtn{};
 int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{10, 30, 50}; //temporary fixed values
 const Color4f g_GrayOutColor{ 0.f, 0.f, 0.f, 0.8f };
+float g_LosingAnimationProgress{ 0.f };
+Texture g_TextureLosing{};
 
 Texture g_MoneyIcon{};
 Texture g_ArrNumbers[10]{};
@@ -444,6 +447,7 @@ void DrawBloons();
 void DrawMonkeys();
 
 void StartWave();
+void RestartGame();
 
 void DrawUI();
 void UpdateUIShopMenu(float elapsedSec);
@@ -453,6 +457,7 @@ void UpdateUIButtonCollisions();
 void DrawPreviewMonkey();
 float DrawNumberSequenceTopCenter(int number, const Point2f& topCenter); //returns width
 float DrawNumberSequenceTopLeft(int number, Point2f topLeft); //returns width
+void DrawLosingScreen();
 
 void SpawnBloon(const Point2f& spawnPoint, Bloon& bloon, int index);
 void DestroyBloon(Bloon& bloon);

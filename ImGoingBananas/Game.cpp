@@ -149,6 +149,15 @@ void Start()
 		std::cout << "ERROR! Failed to load the texture!\n";
 	}
 
+	if (!TextureFromFile("Resources/UI/lose.png", g_TextureLosing)) {
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+
+	std::cout << "\033[33m Welcome to 'I'm going Bananas! Your goal is to not let any of bloons on board reach your base\n";
+	std::cout << "You can open menu to buy monkeys by pressing the 'TAB' key. Don't forget to keep enough money for it!\n";
+	std::cout << "You may upgrade by selecting a monkey already on field and pressing UPGRAGE button!\n";
+	std::cout << "You may also sell the monkey to refund a part of the cost and free up the space!\n";
+
 	InitPath();
 	StartWave();
 }
@@ -159,27 +168,38 @@ void Draw()
 
 	// Put your own draw statements here
 	DrawBoard();
-	DrawBloons();
-	DrawMonkeys();
-	DrawProjectiles();
-	DrawUI();
+	if (g_PlayerHp > 0) {
+		DrawBloons();
+		DrawMonkeys();
+		DrawProjectiles();
+		DrawUI();
 
-	if (g_IsPreviewOn)
-	{
-		DrawPreviewMonkey();
+		if (g_IsPreviewOn)
+		{
+			DrawPreviewMonkey();
+		}
+
+		DrawNumberSequenceTopLeft(g_Money, Point2f{});
 	}
-
-	DrawNumberSequenceTopLeft(g_Money, Point2f{});
+	else {
+		DrawLosingScreen();
+	}
 }
 
 void Update(float elapsedSec)
 {
-	UpdateUIShopMenu(elapsedSec);
-	UpdateUIUpgradeMenu(elapsedSec);
-	UpdateUINextWave(elapsedSec);
-	UpdateMonkey(elapsedSec);
-	UpdateProjectiles(elapsedSec);
-	UpdateBloons(elapsedSec);
+	if (g_PlayerHp > 0) {
+		UpdateUIShopMenu(elapsedSec);
+		UpdateUIUpgradeMenu(elapsedSec);
+		UpdateUINextWave(elapsedSec);
+		UpdateMonkey(elapsedSec);
+		UpdateProjectiles(elapsedSec);
+		UpdateBloons(elapsedSec);
+	}
+	else {
+		g_LosingAnimationProgress += 0.2 * elapsedSec;
+	}
+	
 }
 
 void End()
@@ -238,6 +258,7 @@ void End()
 	DeleteTexture(g_MoneyIcon);
 	DeleteTexture(g_NextWaveBtn.texture);
 	DeleteTexture(g_NextWaveBtn2);
+	DeleteTexture(g_TextureLosing);
 
 	delete[] g_ArrMonkeys;
 	delete[] g_ArrBloons;
@@ -250,7 +271,9 @@ void End()
 #pragma region inputHandling											
 void OnKeyDownEvent(SDL_Keycode key)
 {
-
+	if (key == SDLK_r) {
+		RestartGame();
+	}
 }
 
 void OnKeyUpEvent(SDL_Keycode key)
@@ -519,6 +542,7 @@ void InitPath()
 			g_CurrentPathDirection = Direction::down;
 		}
 	}
+	
 
 	delete[] g_Path;
 	g_Path = nullptr;
@@ -527,7 +551,9 @@ void InitPath()
 
 	for (int index = 0; index < g_PathWaypointAmount; ++index) {
 		g_Path[index] = tempPath[index];
+		g_Path[index].y -= 15.f;
 	}
+	g_Path[g_PathWaypointAmount - 1].x += g_CellSize.x;
 
 	delete[] tempPath;
 }
@@ -573,12 +599,12 @@ void StartWave()
 
 	if (g_CurrentWave < 3)
 	{
-		bloonRandomOffsetFactor = 0;
+		bloonRandomOffsetFactor = 1;
 		maxTierOfBloon = 2;
 	}
 	else if (g_CurrentWave < 6)
 	{
-		bloonRandomOffsetFactor = 0;
+		bloonRandomOffsetFactor = 2;
 		maxTierOfBloon = 3;
 	}
 	else if (g_CurrentWave < 8) {
@@ -615,8 +641,8 @@ void StartWave()
 		//Check if bloon went overboard just in case
 		if (randomBloon < g_MinBloonHealth)
 			randomBloon = g_MinBloonHealth;
-		else if (randomBloon > g_MaxBloonHealth)
-			randomBloon = g_MaxBloonHealth;
+		else if (randomBloon > maxTierOfBloon)
+			randomBloon = maxTierOfBloon;
 
 		bloonsHpToSpawn -= GetBloonFromIndex(randomBloon - 1).hp;
 
@@ -656,6 +682,35 @@ void StartWave()
 		std::cout << "Secret, shhh" << std::endl;
 		g_AlternateBuyButtonOn = true;
 	}
+	g_NextWaveVerticallOffset = 0;
+	g_UINextWaveShiftTransition = 0;
+}
+
+void RestartGame()
+{
+	g_Money = 20;
+	g_CurrentWave = 0;
+	g_PlayerHp = 10;
+	g_LosingAnimationProgress = 0.f;
+	g_MonkeysOnBoard = 0;
+	g_ProjectilesOnBoardAmount = 0;
+	g_AmountActiveBloons = 0;
+	g_PreviewMonkeyId = 0;
+	g_IsUIActive = 0;
+	g_IsMonkeySelected = 0;
+	g_SelectedMonkeyId = 0;
+
+	for (int i{}; i < g_ProjectilesOnBoardAmount; ++i) {
+		if (g_ArrProjectiles[i].maxPierce > 0 &&
+			g_ArrProjectiles[i].piercedBloonIds != nullptr) {
+			DeletePiercedBloonIds(g_ArrProjectiles[i]);
+		}
+	}
+	delete[] g_ArrMonkeys;
+	delete[] g_ArrProjectiles;
+
+	StartWave();
+
 }
 
 void SpawnBloon(const Point2f& spawnPoint, Bloon& bloon, int index)
@@ -711,6 +766,8 @@ void UpdateBloons(float elapsedSec)
 		float distance{ GetDistance(g_ArrBloons[index].location, g_Path[g_ArrBloons[index].currentNavigationPointId])  };
 
 		if (GetDistance(g_ArrBloons[index].location, g_Path[g_PathWaypointAmount - 1]) < g_ArrBloons[index].speed * elapsedSec) {
+			g_PlayerHp -= floor(pow(g_ArrBloons[index].hp, 0.66f));
+			std::cout << g_PlayerHp << std::endl;
 			DestroyBloon(g_ArrBloons[index]);
 			--g_AmountActiveBloons;
 		}
@@ -1552,6 +1609,23 @@ float DrawNumberSequenceTopLeft(int number, Point2f topLeft)
 	}
 
 	return width;
+}
+
+void DrawLosingScreen()
+{
+	const Color4f background{ 0.f, 0.f, 0.f, g_LosingAnimationProgress};
+	Rectf target{ 0,0, g_WindowWidth, g_WindowHeight };
+	utils::SetColor(background);
+	FillRect(target);
+	if (g_LosingAnimationProgress > 0.9f) {
+		Rectf TextureTarget{
+			g_WindowWidth * 0.5f - g_TextureLosing.width,
+			g_WindowHeight * 0.5f - g_TextureLosing.height,
+			g_TextureLosing.width*2,
+			g_TextureLosing.height*2
+		};
+		utils::DrawTexture(g_TextureLosing, TextureTarget);
+	}
 }
 
 void NormalizeVector(Point2f& vector)
