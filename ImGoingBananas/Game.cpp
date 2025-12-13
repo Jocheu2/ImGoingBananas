@@ -225,20 +225,18 @@ void Draw()
 	{
 		DrawBoard();
     if (g_PlayerHp > 0) {
-      DrawBloons();
-      DrawMonkeys();
-      DrawProjectiles();
-      DrawUI();
+		DrawBloons();
+		DrawMonkeys();
+		DrawProjectiles();
+		DrawUI();
 
-      if (g_IsPreviewOn)
-      {
-        DrawPreviewMonkey();
-      }
-
-      DrawNumberSequenceTopLeft(g_Money, Point2f{});
+		if (g_IsPreviewOn)
+		{
+			DrawPreviewMonkey();
+		}
 	  }
     else {
-      DrawLosingScreen();
+        DrawLosingScreen();
     }
   }
 	else
@@ -251,20 +249,20 @@ void Update(float elapsedSec)
 {
 	if (!g_IsMainMenuActive)
 	{
-    if (g_PlayerHp > 0) {
-      UpdateUIShopMenu(elapsedSec);
-      UpdateUIUpgradeMenu(elapsedSec);
-      UpdateUINextWave(elapsedSec);
-      UpdateMonkey(elapsedSec);
-      UpdateProjectiles(elapsedSec);
-      UpdateBloons(elapsedSec);
-    }
+		if (g_PlayerHp > 0) {
+			UpdateUIShopMenu(elapsedSec);
+			UpdateUIUpgradeMenu(elapsedSec);
+			UpdateUINextWave(elapsedSec);
+			UpdateMonkey(elapsedSec);
+			UpdateProjectiles(elapsedSec);
+			UpdateBloons(elapsedSec);
+		}
     else {
-      g_LosingAnimationProgress += 0.2 * elapsedSec;
+        g_LosingAnimationProgress += 0.2 * elapsedSec;
     }
   }
 	else 
-  {
+    {
 		UpdateMainMenu(elapsedSec);
 	}
 }
