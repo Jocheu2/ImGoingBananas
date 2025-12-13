@@ -193,6 +193,17 @@ void Start()
 		std::cout << "ERROR! Failed to load the texture!\n";
 	}
 
+	//Current wave and hp
+	if (!TextureFromString("Current wave: ", "Resources/Fonts/Calistoga-Regular.ttf", g_FontSize, Color4f{ 1, 1, 1, 1 }, g_CurrentWaveText))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+
+	if (!TextureFromString("HP ", "Resources/Fonts/Calistoga-Regular.ttf", g_FontSize, Color4f{ 1, 1, 1, 1 }, g_CurrentHpText))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+
 	//Font numbers
 	for (int i = 0; i < 10; ++i)
 	{
@@ -318,10 +329,7 @@ void End()
 
 	//Delete information on pierced bloons from existing projectiles
 	for (int i{}; i < g_ProjectilesOnBoardAmount; ++i) { 
-		if (g_ArrProjectiles[i].maxPierce > 0 &&
-			g_ArrProjectiles[i].piercedBloonIds != nullptr) {
-			DeletePiercedBloonIds(g_ArrProjectiles[i]);
-		}
+		DeletePiercedBloonIds(g_ArrProjectiles[i]);
 	}
 	for (int i = 0; i < g_AmountOfUpgradesPerMonkey; ++i)
 	{
@@ -355,6 +363,8 @@ void End()
 	DeleteTexture(g_SelectMapTitle);
 	DeleteTexture(g_TextureLosing);
 	DeleteTexture(g_StartWaveBtn);
+	DeleteTexture(g_CurrentWaveText);
+	DeleteTexture(g_CurrentHpText);
 
 	
 	delete[] g_ArrMonkeys;
@@ -856,11 +866,6 @@ void StartWave()
 
 	if (bloonsHpToSpawn  < 40)
 	{
-		bloonRandomOffsetFactor = 0;
-		maxTierOfBloon = 1;
-	}
-	else if (bloonsHpToSpawn < 55)
-	{
 		bloonRandomOffsetFactor = 1;
 		maxTierOfBloon = 2;
 	}
@@ -1324,15 +1329,30 @@ void DrawProjectiles()
 
 		float angle{};
 		if(g_ArrProjectiles[index].behaviour != ProjectileBehaviour::Boomerang && 
-			g_ArrProjectiles[index].behaviour != ProjectileBehaviour::HomingBoomerang) 
+			g_ArrProjectiles[index].behaviour != ProjectileBehaviour::HomingBoomerang &&
+			g_ArrProjectiles[index].behaviour != ProjectileBehaviour::Ring)
 		{
 			angle =  atan2f(g_ArrProjectiles[index].direction.y, g_ArrProjectiles[index].direction.x) * g_Rad2Deg ;
 		}
-		else 
+		else if(g_ArrProjectiles[index].behaviour != ProjectileBehaviour::Ring)
 		{
-			const float amountOfBoomerangSpins{ 1 + (g_ArrProjectiles[index].maxPierce - g_ArrProjectiles[index].bloonsPierced) * 0.1f };
+			const float amountOfBoomerangSpins{ 2 + (g_ArrProjectiles[index].maxPierce - g_ArrProjectiles[index].bloonsPierced) * 0.1f };
 			angle = atan2f(g_ArrProjectiles[index].direction.y, g_ArrProjectiles[index].direction.x) * g_Rad2Deg 
 				+ g_ArrProjectiles[index].timer / g_ArrProjectiles[index].lifetime * 360.f * amountOfBoomerangSpins;
+		}
+		else
+		{
+			const float opacity{ 1 - powf(g_ArrProjectiles[index].timer / g_ArrProjectiles[index].lifetime, 2) };
+			const Color4f ringInsideColor{ 1.f, 0.5f, 0.f, opacity };
+			const Color4f ringRimColor{ 1.f, 0.5f, 0.f, 1.f };
+			const float ringRimThicness{ 5.f };
+
+			utils::SetColor(ringInsideColor);
+			utils::FillEllipse(g_ArrProjectiles[index].origin, g_ArrProjectiles[index].radius, g_ArrProjectiles[index].radius);
+
+			utils::SetColor(ringRimColor);
+			utils::DrawEllipse(g_ArrProjectiles[index].origin, g_ArrProjectiles[index].radius, g_ArrProjectiles[index].radius, ringRimThicness * opacity);
+			continue;
 		}
 
 		//const float colliderRadius{ g_ArrProjectiles[index].radius };
@@ -1348,6 +1368,9 @@ void DeleteProjectile(Projectile& projectile) {
 }
 void DeletePiercedBloonIds(Projectile& projectile)
 {
+	if (projectile.piercedBloonIds == nullptr)
+		return;
+
 	delete[] projectile.piercedBloonIds;
 	projectile.piercedBloonIds = nullptr;
 }
@@ -1369,11 +1392,22 @@ void ResizeProjectileArray()
 	{
 		if (index >= g_MaxProjectilesOnBoard)
 		{
-			std::cout << "Cannot write more projectiles to the array! Skipping..\n";
+			std::cout << "Cannot write more projectiles to the array! Skipping...\n";
 			break;
 		}
 
 		tempProjectileArray[index] = g_ArrProjectiles[index];
+	}
+
+	if (g_ProjectilesOnBoardAmount > g_MaxProjectilesOnBoard)
+	{
+		//Clean up all the projectiles
+		for (int index = g_MaxProjectilesOnBoard; index < g_ProjectilesOnBoardAmount; ++index)
+		{
+			DeletePiercedBloonIds(g_ArrProjectiles[index]);
+		}
+
+		g_ProjectilesOnBoardAmount = g_MaxProjectilesOnBoard;
 	}
 
 	if (g_ArrProjectiles != nullptr) {
@@ -1468,7 +1502,7 @@ void UpdateProjectiles(float elapsedSec)
 				break;
 
 			case ProjectileBehaviour::Ring:
-				g_ArrProjectiles[projectileIdx].radius += g_ArrProjectiles[projectileIdx].speed * 0.5f * elapsedSec;
+				g_ArrProjectiles[projectileIdx].radius += g_ArrProjectiles[projectileIdx].speed * elapsedSec;
 				break;
 
 			case ProjectileBehaviour::HomingBoomerang:
@@ -1825,7 +1859,8 @@ void DrawUI()
 		const float costTextWidth{ DrawNumberSequenceTopCenter(cost, costTextTopCenter) };
 
 		const Point2f moneyIconTopLeft{ costTextTopCenter.x - g_MoneyIcon.width - costTextWidth, costTextTopCenter.y };
-		DrawTexture(g_MoneyIcon, moneyIconTopLeft);
+		if (costTextWidth > 0)
+			DrawTexture(g_MoneyIcon, moneyIconTopLeft);
 
 		const Point2f sellBtnTopLeft{ UIUpgradeTopCenter.x - g_SellMonkeyBtn.rect.width / 2.f,
 			costTextTopCenter.y + g_MoneyIcon.height + g_SellMonkeyBtn.rect.height / 2.f };
@@ -1851,15 +1886,36 @@ void DrawUI()
 		DrawTexture(g_NextWaveBtn.texture, g_NextWaveBtn.rect);
 	}
 	
-	//Money display
-	Point2f displayOffset{
+	
+
+	//Main UI BG
+	const Point2f displayOffset{
 		10.f,
 		10.f
 	};
-	DrawTexture(g_MoneyIcon, Point2f{ displayOffset.x , displayOffset.y });
-	DrawNumberSequenceTopLeft(g_Money, Point2f{ displayOffset.x + g_MoneyIcon.width, displayOffset.y });
-	
-	
+
+	const Rectf mainUIBGRect{ 0.f, 0.f, g_CurrentWaveText.width + displayOffset.x * 6, displayOffset.y * 4 + g_CurrentWaveText.height + g_CurrentHpText.height + g_MoneyIcon.height };
+	const Color4f mainUIBGColor{ 0, 0, 0, 0.5f };
+	utils::SetColor(mainUIBGColor);
+	utils::FillRect(mainUIBGRect);
+
+	//Current wave display
+	Point2f currentWaveTopLeft{ displayOffset.x, displayOffset.y };
+	DrawTexture(g_CurrentWaveText, currentWaveTopLeft);
+	currentWaveTopLeft.x += g_CurrentWaveText.width;
+	DrawNumberSequenceTopLeft(g_CurrentWave, currentWaveTopLeft);
+
+	//Current HP display
+	Point2f currentHpTopLeft{ displayOffset.x, displayOffset.y + currentWaveTopLeft.y + g_CurrentWaveText.height };
+	DrawTexture(g_CurrentHpText, currentHpTopLeft);
+	currentHpTopLeft.x += g_CurrentHpText.width;
+	DrawNumberSequenceTopLeft(g_PlayerHp, currentHpTopLeft);
+
+	//Money display
+	Point2f currentMoneyTopLeft{ displayOffset.x, displayOffset.y + currentHpTopLeft.y + g_CurrentHpText.height };
+	DrawTexture(g_MoneyIcon, currentMoneyTopLeft);
+	currentMoneyTopLeft.x += g_MoneyIcon.width;
+	DrawNumberSequenceTopLeft(g_Money, currentMoneyTopLeft);
 }
 void UpdateUIShopMenu(float elapsedSec)
 {
