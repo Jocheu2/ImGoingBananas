@@ -105,6 +105,8 @@ void Start()
 		std::cout << "ERROR! Failed to load the texture!\n";
 	}if (!TextureFromFile("Resources/UI/nextWave02.png", g_NextWaveBtn2)) {
 		std::cout << "ERROR! Failed to load the texture!\n";
+	}if (!TextureFromFile("Resources/UI/startWave.png", g_StartWaveBtn)) {
+		std::cout << "ERROR! Failed to load the texture!\n";
 	}
 	g_NextWaveBtn.rect.width = g_NextWaveBtn.texture.width;
 	g_NextWaveBtn.rect.height = g_NextWaveBtn.texture.height;
@@ -360,11 +362,15 @@ void End()
 	DeleteTexture(g_StartGameButton.texture);
 	DeleteTexture(g_SelectMapTitle);
 	DeleteTexture(g_TextureLosing);
+	DeleteTexture(g_StartWaveBtn);
 	DeleteTexture(g_CurrentWaveText);
 	DeleteTexture(g_CurrentHpText);
 
+	
 	delete[] g_ArrMonkeys;
-	delete[] g_ArrBloons;
+	if (g_ArrBloons != nullptr) {
+		delete[] g_ArrBloons;
+	}
 	delete[] g_Path;
 	delete[] g_ArrProjectiles;
 
@@ -397,6 +403,11 @@ void OnKeyUpEvent(SDL_Keycode key)
 	{
 		g_IsPreviewOn = false;
 		g_IsSelectingMap = false;
+	}
+
+	if (key == SDLK_m) {
+		RestartGame();
+		g_IsMainMenuActive = true;
 	}
 }
 
@@ -576,6 +587,7 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
     
 			if (g_NextWaveBtn.isHoveringOver) {
 				StartWave();
+				g_IsSecretRolled = false;
 			}
 		}
 		else
@@ -595,6 +607,7 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 					if (g_ArrMapsButtons[i].isHoveringOver)
 					{
 						g_CurrentMapIndex = i;
+						g_ArrMapsButtons[i].isHoveringOver = false;
 						g_IsSelectingMap = false;
 						g_IsMainMenuActive = false;
 						StartGame();
@@ -711,7 +724,6 @@ void StartGame()
 	g_CellSize = Point2f{ g_WindowWidth / g_Cols, g_WindowHeight / g_Rows };
 	InitPath();
 	InitPathTextures();
-	StartWave();
 }
 
 void InitPath()
@@ -841,8 +853,8 @@ void DrawBoard()
 void StartWave()
 {
 	++g_CurrentWave;
-	delete[] g_ArrBloons;
-	int bloonsHpToSpawn{static_cast<int>( ceil(30 + pow(2 * g_CurrentWave,1.5f))) };
+	
+	int bloonsHpToSpawn{static_cast<int>( ceil(20 + pow(2.5 * g_CurrentWave,1.5f))) };
 	int* arrBloonsToSpawn{ new int[g_AmountOfBloonsTextures] {} };
 	g_TotalAmountOfBloons = 0;
 
@@ -974,12 +986,7 @@ void StartWave()
 	g_AmountActiveBloons = g_TotalAmountOfBloons;
 	delete[] arrBloonsToSpawn;
 
-	//Determines if a secret new wave button appears this wave
-	g_AlternateBuyButtonOn = false;
-	if (rand() % 20 == 0) {
-		//std::cout << "Secret, shhh" << std::endl;
-		g_AlternateBuyButtonOn = true;
-	}
+	
 }
 
 void RestartGame()
@@ -990,11 +997,13 @@ void RestartGame()
 	g_LosingAnimationProgress = 0.f;
 	g_MonkeysOnBoard = 0;
 	g_ProjectilesOnBoardAmount = 0;
+	g_MaxProjectilesOnBoard = 0;
 	g_AmountActiveBloons = 0;
 	g_PreviewMonkeyId = 0;
 	g_IsUIActive = 0;
 	g_IsMonkeySelected = 0;
 	g_SelectedMonkeyId = 0;
+	g_TotalAmountOfBloons = 0;
 
 	for (int i{}; i < g_ProjectilesOnBoardAmount; ++i) {
 		if (g_ArrProjectiles[i].maxPierce > 0 &&
@@ -1004,11 +1013,14 @@ void RestartGame()
 	}
 	delete[] g_ArrMonkeys;
 	delete[] g_ArrProjectiles;
+	delete[] g_ArrBloons;
+
+	g_ArrBloons = nullptr;
 
 	g_ArrMonkeys = nullptr;
 	g_ArrProjectiles = nullptr;
 
-	StartWave();
+	//StartWave();
 
 }
 
@@ -1864,8 +1876,11 @@ void DrawUI()
 	-g_NextWaveVerticallOffset + g_WindowHeight };
 	g_NextWaveBtn.rect.top = nextWaveTopLeft.y;
 	g_NextWaveBtn.rect.left = nextWaveTopLeft.x;
-	if (g_AlternateBuyButtonOn == true) {
+	if (g_AlternateBuyButtonOn == true && g_CurrentWave!=0) {
 		DrawTexture(g_NextWaveBtn2, g_NextWaveBtn.rect);		
+	}
+	else if(g_CurrentWave==0 || (g_CurrentWave == 1 && g_AmountActiveBloons!=0)){
+		DrawTexture(g_StartWaveBtn, g_NextWaveBtn.rect);
 	}
 	else {
 		DrawTexture(g_NextWaveBtn.texture, g_NextWaveBtn.rect);
@@ -1985,6 +2000,15 @@ void UpdateUINextWave(float elapsedSec)
 		
 		if (g_UINextWaveShiftTransition <= 0) {
 			g_UINextWaveShiftTransition = 0;
+			if (g_IsSecretRolled == false) {
+				//Determines if a secret new wave button appears this wave
+				g_AlternateBuyButtonOn = false;
+				if (rand() % 2 == 0 && g_CurrentWave!=0 &&g_CurrentWave!=1) {
+					//std::cout << "Secret, shhh" << std::endl;
+					g_AlternateBuyButtonOn = true;
+				}
+				g_IsSecretRolled = true;
+			}
 			return;
 		}
 		g_UINextWaveShiftTransition -= g_NextWaveBtn.rect.height * transitionSpeedScalar * elapsedSec;
