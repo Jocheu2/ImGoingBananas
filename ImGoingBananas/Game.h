@@ -291,7 +291,7 @@ const Monkey dartMonkey{
     Dart,
     100.f,
     50.f,
-    0.5f
+    0.75f
 };
 const Monkey boomerangMonkey{
     1,
@@ -379,9 +379,9 @@ float g_UINextWaveShiftTransition{};
 //Dart
 MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        15,     //cost
+        50,     //cost
         0,      //damage
-        1,      //pierce
+        2,      //pierce
         2,      //radius
         0,      //detect radius
         0,      //home radius
@@ -390,7 +390,7 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         2       //lifetime
     },
     MonkeyUpgrade{
-        50,     //cost
+        100,     //cost
         1,      //damage
         2,      //pierce
         1,      //radius
@@ -404,38 +404,38 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
 //Boomerang
 MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        40,     //cost
+        100,     //cost
         0,      //damage
         5,      //pierce
         5,      //radius
         50,     //detect radius
         200,    //home radius
         0.1f,      //firerate
-        300,      //speed
+        200,      //speed
         200,       //lifetime
         -1,
         ProjectileBehaviour::HomingBoomerang
     },
     MonkeyUpgrade{
-        60,     //cost
-        1,      //damage
+        225,     //cost
+        0,      //damage
         7,      //pierce
         1,      //radius
         0,      //detect radius
         100,      //home radius
         1.f,      //firerate
-        200,      //speed
+        100,      //speed
         200,       //lifetime
     }
 };
 //Tack
 MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        50,     //cost
+        150,     //cost
         0,      //damage
         10,      //pierce
         2,      //radius
-        0,      //detect radius
+        25,      //detect radius
         0,      //home radius
         0.25f,    //firerate
         2,      //speed
@@ -444,15 +444,15 @@ MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         ProjectileBehaviour::Ring
     },
     MonkeyUpgrade{
-        80,     //cost
-        2,      //damage
+        300,     //cost
+        1,      //damage
         0,      //pierce
         1,      //radius
-        0,      //detect radius
+        25,      //detect radius
         0,      //home radius
         0.25f,    //firerate
         2,      //speed
-        0       //lifetime
+        100       //lifetime
     }
 };
 

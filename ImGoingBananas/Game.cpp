@@ -180,7 +180,6 @@ void Draw()
 			DrawPreviewMonkey();
 		}
 
-		DrawNumberSequenceTopLeft(g_Money, Point2f{});
 	}
 	else {
 		DrawLosingScreen();
@@ -598,30 +597,70 @@ void StartWave()
 	int bloonRandomOffsetFactor{};
 	int maxTierOfBloon{};
 
-	if (g_CurrentWave <= 3)
+	if (bloonsHpToSpawn  < 40)
+	{
+		bloonRandomOffsetFactor = 0;
+		maxTierOfBloon = 1;
+	}
+	else if (bloonsHpToSpawn < 55)
 	{
 		bloonRandomOffsetFactor = 1;
 		maxTierOfBloon = 2;
 	}
-	else if (g_CurrentWave <= 6)
-	{
+	else if (bloonsHpToSpawn < 65) {
 		bloonRandomOffsetFactor = 2;
 		maxTierOfBloon = 3;
 	}
-	else if (g_CurrentWave <= 8) {
+	else if (bloonsHpToSpawn < 80) {
 		bloonRandomOffsetFactor = 1;
 		maxTierOfBloon = 3;
 	}
-	else if (g_CurrentWave <= 10) {
+	else if (bloonsHpToSpawn < 105) {
 		bloonRandomOffsetFactor = 2;
 		maxTierOfBloon = 4;
 	}
-	else if (g_CurrentWave <= 12) {
-		bloonRandomOffsetFactor = 3;
+	else if (bloonsHpToSpawn < 125) {
+		bloonRandomOffsetFactor = 1;
+		maxTierOfBloon = 4;
+	}
+	else if (bloonsHpToSpawn < 150) {
+		bloonRandomOffsetFactor = 2;
 		maxTierOfBloon = 5;
 	}
+	else if (bloonsHpToSpawn < 175) {
+		bloonRandomOffsetFactor = 1;
+		maxTierOfBloon = 5;
+	}
+	else if (bloonsHpToSpawn < 205) {
+		bloonRandomOffsetFactor = 2;
+		maxTierOfBloon = 6;
+	}
+	else if (bloonsHpToSpawn < 235) {
+		bloonRandomOffsetFactor = 1;
+		maxTierOfBloon = 6;
+	}
+	else if (bloonsHpToSpawn < 260) {
+		bloonRandomOffsetFactor = 3;
+		maxTierOfBloon = 7;
+	}
+	else if (bloonsHpToSpawn < 300) {
+		bloonRandomOffsetFactor = 2;
+		maxTierOfBloon = 7;
+	}
+	else if (bloonsHpToSpawn < 340) {
+		bloonRandomOffsetFactor = 2;
+		maxTierOfBloon = 8;
+	}
+	else if (bloonsHpToSpawn < 375) {
+		bloonRandomOffsetFactor = 1;
+		maxTierOfBloon = 8;
+	}
+	else if(bloonsHpToSpawn < 420) {
+		bloonRandomOffsetFactor = 1;
+		maxTierOfBloon = 9;
+	}
 	else {
-		bloonRandomOffsetFactor = 8;
+		bloonRandomOffsetFactor = 0;
 		maxTierOfBloon = 9;
 	}
 
@@ -691,8 +730,6 @@ void StartWave()
 		std::cout << "Secret, shhh" << std::endl;
 		g_AlternateBuyButtonOn = true;
 	}
-	g_NextWaveVerticallOffset = 0;
-	g_UINextWaveShiftTransition = 0;
 }
 
 void RestartGame()
@@ -717,6 +754,9 @@ void RestartGame()
 	}
 	delete[] g_ArrMonkeys;
 	delete[] g_ArrProjectiles;
+
+	g_ArrMonkeys = nullptr;
+	g_ArrProjectiles = nullptr;
 
 	StartWave();
 
@@ -823,7 +863,10 @@ void PlaceMonkey(const Point2f& position, const Monkey& monkey)
 
 	//transfer the arrays
 	++g_MonkeysOnBoard;
-	delete[] g_ArrMonkeys;
+	if (g_ArrMonkeys != nullptr) {
+		delete[] g_ArrMonkeys;
+	}
+	
 	g_ArrMonkeys = tempArrayMonkey;
 	g_IsPreviewOn = false;
 
@@ -1066,7 +1109,9 @@ void ResizeProjectileArray()
 		tempProjectileArray[index] = g_ArrProjectiles[index];
 	}
 
-	delete[] g_ArrProjectiles;
+	if (g_ArrProjectiles != nullptr) {
+		delete[] g_ArrProjectiles;
+	}
 	g_ArrProjectiles = tempProjectileArray;
 }
 void UpdateProjectiles(float elapsedSec)
@@ -1443,20 +1488,28 @@ void DrawUI()
 	}
 
 	//Next wave button
-	if (g_AmountActiveBloons <= 0) {
-		const Point2f nextWaveTopLeft{
-		g_WindowWidth/2.f - g_NextWaveBtn.rect.width*0.5f,
-		-g_NextWaveVerticallOffset + g_WindowHeight };
-		g_NextWaveBtn.rect.top = nextWaveTopLeft.y;
-		g_NextWaveBtn.rect.left = nextWaveTopLeft.x;
-		if (g_AlternateBuyButtonOn == true) {
-			DrawTexture(g_NextWaveBtn2, g_NextWaveBtn.rect);
-		}
-		else {
-			DrawTexture(g_NextWaveBtn.texture, g_NextWaveBtn.rect);
-		}
-		
+	
+	const Point2f nextWaveTopLeft{
+	g_WindowWidth/2.f - g_NextWaveBtn.rect.width*0.5f,
+	-g_NextWaveVerticallOffset + g_WindowHeight };
+	g_NextWaveBtn.rect.top = nextWaveTopLeft.y;
+	g_NextWaveBtn.rect.left = nextWaveTopLeft.x;
+	if (g_AlternateBuyButtonOn == true) {
+		DrawTexture(g_NextWaveBtn2, g_NextWaveBtn.rect);		
 	}
+	else {
+		DrawTexture(g_NextWaveBtn.texture, g_NextWaveBtn.rect);
+	}
+	
+	//Money display
+	Point2f displayOffset{
+		10.f,
+		10.f
+	};
+	DrawTexture(g_MoneyIcon, Point2f{ displayOffset.x , displayOffset.y });
+	DrawNumberSequenceTopLeft(g_Money, Point2f{ displayOffset.x + g_MoneyIcon.width, displayOffset.y });
+	
+	
 }
 void UpdateUIShopMenu(float elapsedSec)
 {
@@ -1538,7 +1591,15 @@ void UpdateUINextWave(float elapsedSec)
 		g_NextWaveVerticallOffset = g_NextWaveBtn.rect.height * powf(t,2);
 	}
 	else {
-		g_UINextWaveShiftTransition = 0;
+		
+		if (g_UINextWaveShiftTransition <= 0) {
+			g_UINextWaveShiftTransition = 0;
+			return;
+		}
+		g_UINextWaveShiftTransition -= g_NextWaveBtn.rect.height * transitionSpeedScalar * elapsedSec;
+		const float t{ g_UINextWaveShiftTransition / g_NextWaveBtn.rect.height };
+		g_NextWaveVerticallOffset = g_NextWaveBtn.rect.height * powf(t, 2);
+		
 	}
 }
 //Add more UI collisions as you add more buttons
