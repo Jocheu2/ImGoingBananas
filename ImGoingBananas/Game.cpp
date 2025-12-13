@@ -695,7 +695,6 @@ void UpdateMainMenuButtonsCollision()
 void StartGame()
 {
 	g_CurrentMapIndex = 2;
-	std::cout << "AAA";
 	g_Cols = GetCurrentGridCols();
 	g_Rows = GetCurrentGridRows();
 	g_BoardTextures = new Texture*[g_Cols * g_Rows] {};
@@ -835,11 +834,10 @@ void StartWave()
 	++g_CurrentWave;
 	delete[] g_ArrBloons;
 	int bloonsHpToSpawn{static_cast<int>( ceil(30 + pow(2 * g_CurrentWave,1.5f))) };
-	std::cout << bloonsHpToSpawn << std::endl;
 	int* arrBloonsToSpawn{ new int[g_AmountOfBloonsTextures] {} };
 	g_TotalAmountOfBloons = 0;
 
-	std::cout << "Wave " << g_CurrentWave << std::endl;
+	//std::cout << "Wave " << g_CurrentWave << std::endl;
 
 	//Randomness
 	int bloonRandomOffsetFactor{};
@@ -975,7 +973,7 @@ void StartWave()
 	//Determines if a secret new wave button appears this wave
 	g_AlternateBuyButtonOn = false;
 	if (rand() % 20 == 0) {
-		std::cout << "Secret, shhh" << std::endl;
+		//std::cout << "Secret, shhh" << std::endl;
 		g_AlternateBuyButtonOn = true;
 	}
 }
@@ -1039,9 +1037,6 @@ void DrawBloons()
 		};
 
 		utils::DrawTexture(g_ArrBloonsTextures[g_ArrBloons[index].bloonTextureId], drawLocation);
-		utils::DrawEllipse(bloonCollider.center, bloonCollider. radius, bloonCollider.radius);
-		utils::FillEllipse(drawLocation, 5.f, 5.f);
-		utils::FillEllipse(bloonCollider.center, 5.f, 5.f);
 	}
 }
 void UpdateBloons(float elapsedSec)
