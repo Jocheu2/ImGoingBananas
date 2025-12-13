@@ -20,19 +20,23 @@ const float g_Rad2Deg{ 180.f / g_Pi };
 const float g_Deg2Rad{ g_Pi / 180.f };
 
 //Grid
-int const g_Cols{ 8 }, g_Rows{ 6 };
-int g_BoardGrid[g_Cols * g_Rows]{
-    0,1,1,1,0,0,0,0 ,
+int g_Cols{}, g_Rows{};
+int* g_BoardGrid{ nullptr };
+int g_CurrentMapIndex{};
+//subsection: maps
+const int g_AmountOfMaps{ 1 };
+int const g_ColsMap0{ 8 }, g_RowsMap0{ 6 };
+int g_BoardGridMap0[g_ColsMap0 * g_RowsMap0]{
+    0,1,1,1,0,0,0,0,
     0,1,0,1,1,1,1,0,
     0,1,0,0,0,0,1,0,
     0,1,0,1,1,1,1,0,
     -1,1,0,1,0,0,0,0,
     0,0,0,1,1,1,1,2 };
+Texture** g_BoardTextures{}; // create on heap 
+const bool g_IsPathMadeOutOfStone{ false };
 
-const Point2f g_CellSize{
-    g_WindowWidth / g_Cols,
-    g_WindowHeight / g_Rows
-};
+Point2f g_CellSize{};
 
 //Variables needed to create a path for Bloons to follow
 int g_PathWaypointAmount{ 0 };
@@ -220,7 +224,7 @@ const Projectile Dart{
     0,
     ProjectileBehaviour::Dart
 };
-const float g_BoomerangSwingRadius{ g_CellSize.x * 0.5f };
+const float g_BoomerangSwingRadius{ 50.f };
 const float g_BoomerangSpeed{ 100.f }; //pixels per second
 const Projectile Boomerang{
     3,
@@ -327,6 +331,11 @@ const int g_AmountOfUpgradesPerMonkey{ 3 };
 Texture g_ArrMonkeyTextures[g_AmountOfMonkeyTextures * g_AmountOfUpgradesPerMonkey]{};
 const int g_AmountOfProjectiles{ 7 };
 Texture g_ArrProjectileTextures[g_AmountOfProjectiles]{};
+const int g_AmountOfGrassTextures{ 9 };
+Texture g_ArrGrassTextures[g_AmountOfGrassTextures]{};
+const int g_AmountOfPathTextures{ 3 };
+Texture g_ArrPathTextures[g_AmountOfPathTextures]{};
+Texture g_StonePathTexture{};
 //subsection: rescale
 const int g_CurrentTextPixelSize{ 10 };
 const int g_RescaledTextPixelSize{ 7 };
@@ -340,6 +349,7 @@ float g_UIShopShiftTransition{};
 float g_UIShopHorizontalOffset{};
 const int g_AmountOfMonkeyBuyButtons{ 3 };
 const int g_FontSize{ 18 };
+const int g_TitleFontSize{ static_cast<int>(g_FontSize * 3) };
 float g_UIBackgroundWidth{ 185 };
 Texture g_ArrUIMonkeyTextButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_ArrUIMonkeyBuyButtons[g_AmountOfMonkeyBuyButtons]{};
@@ -471,7 +481,26 @@ int g_MaxProjectilesOnBoard{};
 int g_ProjectilesOnBoardAmount{};
 Projectile* g_ArrProjectiles{nullptr};
 
+//Main Menu
+bool g_IsMainMenuActive{ true };
+bool g_IsSelectingMap{};
+float g_MainMenuBananaVerticalOffset{};
+float g_MainMenuBananaGlowRotation{};
+float g_MainMenuTime{}; // in seconds
+Texture g_MainMenuBG{};
+Texture g_MainMenuBanana{};
+Texture g_MainMenuBananaGlow{};
+UIButton g_StartGameButton{};
+Texture g_SelectMapTitle{};
+Texture g_ArrMapsNames[g_AmountOfMaps]{};
+UIButton g_ArrMapsButtons[g_AmountOfMaps]{};
+
 // Declare your own functions here
+void DrawMainMenu();
+void UpdateMainMenu(float elapsedSec);
+void UpdateMainMenuButtonsCollision();
+void StartGame();
+
 void DrawBoard();
 void DrawBloons();
 void DrawMonkeys();
@@ -497,12 +526,16 @@ void UpdateBloons(float elapsedSec);
 int GetRand(int min, int max);
 float GetRand(float start, float end);
 
+int GetCurrentGridCols();
+int GetCurrentGridRows();
+int* GetCurrentBoardGrid();
 Bloon GetBloonFromIndex(int index);
 Monkey GetMonkeyFromIndex(int index);
 MonkeyUpgrade* GetMonkeyUpgradesFromIndex(int index);
 void NormalizeVector(Point2f& vector);
 
 void InitPath();
+void InitPathTextures();
 
 bool IsRectCollidingWithPath(const Rectf& rectangle);
 bool IsCircleCollidingWithPath(const Circlef& circle);

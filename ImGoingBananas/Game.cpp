@@ -48,6 +48,28 @@ void Start()
 		}
 	}
 
+	//Grass, paths
+	for (int i = 0; i < g_AmountOfGrassTextures; ++i)
+	{
+		if (!TextureFromFile("Resources/Tiles/G" + std::to_string(i) + ".png", g_ArrGrassTextures[i]))
+		{
+			std::cout << "ERROR! Failed to load the texture!\n";
+		}
+	}
+
+	for (int i = 0; i < g_AmountOfPathTextures; ++i)
+	{
+		if (!TextureFromFile("Resources/Tiles/P" + std::to_string(i) + ".png", g_ArrPathTextures[i]))
+		{
+			std::cout << "ERROR! Failed to load the texture!\n";
+		}
+	}
+
+	if (!TextureFromFile("Resources/Tiles/PS0.png", g_StonePathTexture))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+
 	//UI
 	for (int i = 0; i < g_AmountOfMonkeyBuyButtons; ++i)
 	{
@@ -122,6 +144,45 @@ void Start()
 	g_TextUIOpenBtn.rect.width = g_TextUIOpenBtn.texture.width;
 	g_TextUIOpenBtn.rect.height = g_TextUIOpenBtn.texture.height;
 
+	//Main Menu
+	if (!TextureFromFile("Resources/UI/mainMenuBG.png", g_MainMenuBG))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+	if (!TextureFromFile("Resources/UI/banana.png", g_MainMenuBanana))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+	if (!TextureFromFile("Resources/UI/bananaGlow.png", g_MainMenuBananaGlow))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+	if (!TextureFromFile("Resources/UI/startGameBtn.png", g_StartGameButton.texture))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+	g_StartGameButton.rect.width = g_StartGameButton.texture.width;
+	g_StartGameButton.rect.height = g_StartGameButton.texture.height;
+
+	if (!TextureFromString("Select Map", "Resources/Fonts/Calistoga-Regular.ttf", g_TitleFontSize, Color4f{ 1, 1, 1, 1 }, g_SelectMapTitle))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+
+	//Map previews
+	for (int i = 0; i < g_AmountOfMaps; ++i)
+	{
+		if (!TextureFromFile("Resources/MapPreviews/" + std::to_string(i) + ".png", g_ArrMapsButtons[i].texture))
+		{
+			std::cout << "ERROR! Failed to load the texture!\n";
+		}
+	}
+
+	if (!TextureFromString("Monkey Meadows", "Resources/Fonts/Calistoga-Regular.ttf", g_FontSize, Color4f{ 1, 1, 1, 1 }, g_ArrMapsNames[0]))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+
 	//Font numbers
 	for (int i = 0; i < 10; ++i)
 	{
@@ -140,6 +201,7 @@ void Start()
 		std::cout << "ERROR! Failed to load the texture!\n";
 	}
 
+	
 	if (!TextureFromFile("Resources/UI/lose.png", g_TextureLosing)) {
 		std::cout << "ERROR! Failed to load the texture!\n";
 	}
@@ -149,9 +211,9 @@ void Start()
 	std::cout << "You may upgrade by selecting a monkey already on field and pressing UPGRAGE button!\n";
 	std::cout << "You may also sell the monkey to refund a part of the cost and free up the space on board!\n";
 	std::cout << "Good luck \n\n This Project was Developed by The Them \033[0m\n";
-
-	InitPath();
-	StartWave();
+  
+  //Turn off 'g_IsMainMenuActive' for debugging purposes
+	//StartGame();
 }
 
 void Draw()
@@ -159,38 +221,52 @@ void Draw()
 	ClearBackground();
 
 	// Put your own draw statements here
-	DrawBoard();
-	if (g_PlayerHp > 0) {
-		DrawBloons();
-		DrawMonkeys();
-		DrawProjectiles();
-		DrawUI();
+	if (!g_IsMainMenuActive)
+	{
+		DrawBoard();
+    if (g_PlayerHp > 0) {
+      DrawBloons();
+      DrawMonkeys();
+      DrawProjectiles();
+      DrawUI();
 
-		if (g_IsPreviewOn)
-		{
-			DrawPreviewMonkey();
-		}
+      if (g_IsPreviewOn)
+      {
+        DrawPreviewMonkey();
+      }
 
-	}
-	else {
-		DrawLosingScreen();
+      DrawNumberSequenceTopLeft(g_Money, Point2f{});
+	  }
+    else {
+      DrawLosingScreen();
+    }
+  }
+	else
+	{
+		DrawMainMenu();
 	}
 }
 
 void Update(float elapsedSec)
 {
-	if (g_PlayerHp > 0) {
-		UpdateUIShopMenu(elapsedSec);
-		UpdateUIUpgradeMenu(elapsedSec);
-		UpdateUINextWave(elapsedSec);
-		UpdateMonkey(elapsedSec);
-		UpdateProjectiles(elapsedSec);
-		UpdateBloons(elapsedSec);
+	if (!g_IsMainMenuActive)
+	{
+    if (g_PlayerHp > 0) {
+      UpdateUIShopMenu(elapsedSec);
+      UpdateUIUpgradeMenu(elapsedSec);
+      UpdateUINextWave(elapsedSec);
+      UpdateMonkey(elapsedSec);
+      UpdateProjectiles(elapsedSec);
+      UpdateBloons(elapsedSec);
+    }
+    else {
+      g_LosingAnimationProgress += 0.2 * elapsedSec;
+    }
+  }
+	else 
+  {
+		UpdateMainMenu(elapsedSec);
 	}
-	else {
-		g_LosingAnimationProgress += 0.2 * elapsedSec;
-	}
-	
 }
 
 void End()
@@ -222,6 +298,16 @@ void End()
 		DeleteTexture(g_ArrUIMonkeyTextButtons[i]);
 	}
 
+	for (int i = 0; i < g_AmountOfGrassTextures; ++i)
+	{
+		DeleteTexture(g_ArrGrassTextures[i]);
+	}
+
+	for (int i = 0; i < g_AmountOfPathTextures; ++i)
+	{
+		DeleteTexture(g_ArrPathTextures[i]);
+	}
+
 	//Delete information on pierced bloons from existing projectiles
 	for (int i{}; i < g_ProjectilesOnBoardAmount; ++i) { 
 		if (g_ArrProjectiles[i].maxPierce > 0 &&
@@ -239,6 +325,13 @@ void End()
 		DeleteTexture(g_ArrNumbers[i]);
 	}
 
+	for (int i = 0; i < g_AmountOfMaps; ++i)
+	{
+		DeleteTexture(g_ArrMapsButtons[i].texture);
+		DeleteTexture(g_ArrMapsNames[i]);
+	}
+
+	DeleteTexture(g_StonePathTexture);
 	DeleteTexture(g_TextUICloseBtn.texture);
 	DeleteTexture(g_TextUIOpenBtn.texture);
 	DeleteTexture(g_ArrBuyUpgradeBtn[0].texture);
@@ -247,12 +340,22 @@ void End()
 	DeleteTexture(g_MoneyIcon);
 	DeleteTexture(g_NextWaveBtn.texture);
 	DeleteTexture(g_NextWaveBtn2);
+	DeleteTexture(g_MainMenuBG);
+	DeleteTexture(g_MainMenuBanana);
+	DeleteTexture(g_MainMenuBananaGlow);
+	DeleteTexture(g_StartGameButton.texture);
+	DeleteTexture(g_SelectMapTitle);
 	DeleteTexture(g_TextureLosing);
 
 	delete[] g_ArrMonkeys;
 	delete[] g_ArrBloons;
 	delete[] g_Path;
 	delete[] g_ArrProjectiles;
+
+	if (g_BoardTextures != nullptr)
+	{
+		delete[] g_BoardTextures;
+	}
 }
 #pragma endregion gameFunctions
 
@@ -273,10 +376,11 @@ void OnKeyUpEvent(SDL_Keycode key)
 		g_IsUIActive = !g_IsUIActive;
 	}
 
-	//Preview
+	//Preview and Selecting maps
 	if (key == SDLK_ESCAPE)
 	{
 		g_IsPreviewOn = false;
+		g_IsSelectingMap = false;
 	}
 }
 
@@ -321,13 +425,14 @@ void OnMouseMotionEvent(const SDL_MouseMotionEvent& e)
 
 void OnMouseDownEvent(const SDL_MouseButtonEvent& e)
 {
-	if (e.button != SDL_BUTTON_LEFT)
+	if (e.button != SDL_BUTTON_LEFT || g_IsMainMenuActive)
 		return;
 
 	Point2f mousePosition{
 	static_cast<float>(e.x),
 	static_cast<float>(e.y)
 	};
+
 	if(g_CanPlaceMonkey && g_IsPreviewOn) PlaceMonkey(mousePosition, GetMonkeyFromIndex(g_PreviewMonkeyId));
 	
 	if (g_CanPlaceMonkey && g_IsPreviewOn) 
@@ -372,95 +477,227 @@ void OnMouseUpEvent(const SDL_MouseButtonEvent& e)
 {
 	if (e.button == SDL_BUTTON_LEFT)
 	{
-		UpdateUIButtonCollisions();
-
-		if (g_IsUIActive)
+		if (!g_IsMainMenuActive)
 		{
-			//Check if user clicked on buy buttons
-			for (int i = 0; i < g_AmountOfMonkeyBuyButtons; ++i)
-			{
-				if (!g_ArrUIMonkeyBuyButtons[i].isHoveringOver)
-					continue;
+			UpdateUIButtonCollisions();
 
-				g_PreviewMonkeyId = i;
-				g_IsPreviewOn = true;
-				g_IsUIActive = false;
-				return;
+			if (g_IsUIActive)
+			{
+				//Check if user clicked on buy buttons
+				for (int i = 0; i < g_AmountOfMonkeyBuyButtons; ++i)
+				{
+					if (!g_ArrUIMonkeyBuyButtons[i].isHoveringOver)
+						continue;
+
+					g_PreviewMonkeyId = i;
+					g_IsPreviewOn = true;
+					g_IsUIActive = false;
+					return;
+				}
+
+				//Check if user clicked on close UI button
+				if (g_TextUICloseBtn.isHoveringOver) 
+				{
+					g_IsUIActive = false;
+				}
+			}
+			else if(g_TextUIOpenBtn.isHoveringOver)
+			{
+				//Check if user clicked on open UI button
+				g_IsUIActive = true;
 			}
 
-			//Check if user clicked on close UI button
-			if (g_TextUICloseBtn.isHoveringOver) 
+			//TODO: add upgrade button collision detection alongside upgrading the actual monkey
+			if (g_IsMonkeySelected && g_ArrBuyUpgradeBtn[0].isHoveringOver)
 			{
-				g_IsUIActive = false;
+				Monkey* monkey{ &g_ArrMonkeys[g_SelectedMonkeyId] };
+
+				if ((*monkey).monkeyUpgradeTier > g_AmountOfUpgradesPerMonkey - 2)
+				{
+					std::cout << "Error! Trying to read some memory! Cannot upgrade monkey.";
+					return;
+				}
+
+				MonkeyUpgrade upgrade{ GetMonkeyUpgradesFromIndex((*monkey).monkeyId)[(*monkey).monkeyUpgradeTier] };
+
+				if (g_Money >= upgrade.cost)
+				{
+					//upgrade
+					Projectile* projectile{ &(*monkey).projectile };
+
+					(*monkey).fireRate += upgrade.fireRate;
+					(*monkey).detectRadius += upgrade.detectRadius;
+					(*monkey).monkeyUpgradeTier++;
+					(*monkey).moneySpent += upgrade.cost;
+					(*projectile).damage += upgrade.damage;
+					(*projectile).radius += upgrade.radius;
+					(*projectile).homingRadius += upgrade.homeRadius;
+					(*projectile).maxPierce += upgrade.pierce;
+					(*projectile).speed += upgrade.speed;
+					(*projectile).lifetime += upgrade.lifetime;
+
+					if(upgrade.swapSpriteId != -1) (*projectile).spriteId = upgrade.swapSpriteId;
+					if(upgrade.swapBehaviour != ProjectileBehaviour::None) (*projectile).behaviour = upgrade.swapBehaviour;
+
+					ResizeProjectileArray();
+
+					g_Money -= upgrade.cost;
+				}
+				else
+				{
+					std::cout << "Not enough funds to upgrade monkey! (" + std::to_string(g_Money) + "$ out of " + std::to_string(upgrade.cost) + "$ needed)\n";
+				}
+			}
+
+			if (g_IsMonkeySelected && g_SellMonkeyBtn.isHoveringOver)
+			{
+				// sell monkey heh
+				g_Money += g_ArrMonkeys[g_SelectedMonkeyId].moneySpent * g_ReturnCostCoefficient;
+				DestroyMonkey(g_SelectedMonkeyId);
+				g_IsMonkeySelected = false;
+				g_SelectedMonkeyId = 0;
+			}
+    
+			if (g_NextWaveBtn.isHoveringOver) {
+				StartWave();
 			}
 		}
-		else if(g_TextUIOpenBtn.isHoveringOver)
+		else
 		{
-			//Check if user clicked on open UI button
-			g_IsUIActive = true;
-		}
-
-		//TODO: add upgrade button collision detection alongside upgrading the actual monkey
-		if (g_IsMonkeySelected && g_ArrBuyUpgradeBtn[0].isHoveringOver)
-		{
-			Monkey* monkey{ &g_ArrMonkeys[g_SelectedMonkeyId] };
-
-			if ((*monkey).monkeyUpgradeTier > g_AmountOfUpgradesPerMonkey - 2)
+			UpdateMainMenuButtonsCollision();
+			if (!g_IsSelectingMap)
 			{
-				std::cout << "Error! Trying to read some memory! Cannot upgrade monkey.";
-				return;
-			}
-
-			MonkeyUpgrade upgrade{ GetMonkeyUpgradesFromIndex((*monkey).monkeyId)[(*monkey).monkeyUpgradeTier] };
-
-			if (g_Money >= upgrade.cost)
-			{
-				//upgrade
-				Projectile* projectile{ &(*monkey).projectile };
-
-				(*monkey).fireRate += upgrade.fireRate;
-				(*monkey).detectRadius += upgrade.detectRadius;
-				(*monkey).monkeyUpgradeTier++;
-				(*monkey).moneySpent += upgrade.cost;
-				(*projectile).damage += upgrade.damage;
-				(*projectile).radius += upgrade.radius;
-				(*projectile).homingRadius += upgrade.homeRadius;
-				(*projectile).maxPierce += upgrade.pierce;
-				(*projectile).speed += upgrade.speed;
-				(*projectile).lifetime += upgrade.lifetime;
-
-				if(upgrade.swapSpriteId != -1) (*projectile).spriteId = upgrade.swapSpriteId;
-				if(upgrade.swapBehaviour != ProjectileBehaviour::None) (*projectile).behaviour = upgrade.swapBehaviour;
-
-				ResizeProjectileArray();
-
-				g_Money -= upgrade.cost;
+				if (g_StartGameButton.isHoveringOver)
+				{
+					g_IsSelectingMap = true;
+				}
 			}
 			else
 			{
-				std::cout << "Not enough funds to upgrade monkey! (" + std::to_string(g_Money) + "$ out of " + std::to_string(upgrade.cost) + "$ needed)\n";
+				for (int i = 0; i < g_AmountOfMaps; ++i)
+				{
+					if (g_ArrMapsButtons[i].isHoveringOver)
+					{
+						g_CurrentMapIndex = i;
+						g_IsSelectingMap = false;
+						g_IsMainMenuActive = false;
+						StartGame();
+					}
+				}
 			}
 		}
-
-		if (g_IsMonkeySelected && g_SellMonkeyBtn.isHoveringOver)
-		{
-			// sell monkey heh
-			g_Money += g_ArrMonkeys[g_SelectedMonkeyId].moneySpent * g_ReturnCostCoefficient;
-			DestroyMonkey(g_SelectedMonkeyId);
-			g_IsMonkeySelected = false;
-			g_SelectedMonkeyId = 0;
-		}
-    
-		if (g_NextWaveBtn.isHoveringOver) {
-			StartWave();
-		}
-
 	}
 }
 #pragma endregion inputHandling
 
 #pragma region ownDefinitions
 // Define your own functions here
+void DrawMainMenu()
+{
+	// Main Menu
+	DrawTexture(g_MainMenuBG, Point2f{});
+
+	const Point2f bananaGlowTopLeft{ g_WindowWidth * 0.5f - g_MainMenuBananaGlow.width * 0.5f,
+		g_WindowHeight * 0.52f - g_MainMenuBananaGlow.height * 0.45f + g_MainMenuBananaVerticalOffset };
+	DrawTexture(g_MainMenuBananaGlow, bananaGlowTopLeft, g_MainMenuBananaGlowRotation);
+
+	const Point2f bananaTopLeft{ g_WindowWidth * 0.5f - g_MainMenuBanana.width * 0.5f,
+		g_WindowHeight * 0.52f - g_MainMenuBanana.height * 0.5f + g_MainMenuBananaVerticalOffset };
+	DrawTexture(g_MainMenuBanana, bananaTopLeft);
+
+	const Point2f startGameBtnTopLeft{ g_WindowWidth * 0.5f - g_StartGameButton.rect.width * 0.5f,
+		g_WindowHeight - g_StartGameButton.rect.height * 2 };
+	DrawTexture(g_StartGameButton.texture, startGameBtnTopLeft);
+	g_StartGameButton.rect.left = startGameBtnTopLeft.x;
+	g_StartGameButton.rect.top = startGameBtnTopLeft.y;
+
+	// Map selection screen
+	if (!g_IsSelectingMap)
+		return;
+
+	const float selectingMapBGWidth{ 600 };
+	const float selectingMapBGHeight{ 400 };
+	const Rectf selectingMapBGRect{ g_WindowWidth * 0.5f - selectingMapBGWidth * 0.5f, g_WindowHeight * 0.5f - selectingMapBGHeight * 0.5f,
+		selectingMapBGWidth, selectingMapBGHeight };
+	const Color4f selectingMapBGColor{ 0, 0, 0, 0.8f };
+
+	utils::SetColor(selectingMapBGColor);
+	utils::FillRect(selectingMapBGRect);
+
+	const Point2f selectMapTitleTopLeft{ g_WindowWidth * 0.5f - g_SelectMapTitle.width * 0.5f, selectingMapBGRect.top + g_SelectMapTitle.height * 0.1f };
+	DrawTexture(g_SelectMapTitle, selectMapTitleTopLeft);
+
+	const float mapButtonsOffset{ selectingMapBGWidth / g_AmountOfMaps };
+	const float mapButtonsScale{ 0.3f };
+	Point2f mapButtonsStartPos{ selectingMapBGRect.left + mapButtonsOffset * 0.5f, g_WindowHeight * 0.5f };
+
+	for (int i = 0; i < g_AmountOfMaps; ++i)
+	{
+		// Map button
+		const UIButton mapButton{ g_ArrMapsButtons[i] };
+		const Rectf mapRect{ mapButtonsStartPos.x - mapButton.texture.width * 0.5f * mapButtonsScale + mapButtonsOffset * i,
+			mapButtonsStartPos.y - mapButton.texture.height * 0.5f * mapButtonsScale,
+			mapButton.texture.width * mapButtonsScale,
+			mapButton.texture.height * mapButtonsScale };
+		g_ArrMapsButtons[i].rect = mapRect;
+
+		DrawTexture(mapButton.texture, mapRect);
+
+		// Map name
+		const Texture mapName{ g_ArrMapsNames[i] };
+		const Point2f mapNameTopLeft{ mapButtonsStartPos.x - mapName.width * 0.5f + mapButtonsOffset * i, mapRect.top + mapRect.height + mapName.height * 0.1f };
+
+		DrawTexture(mapName, mapNameTopLeft);
+	}
+}
+void UpdateMainMenu(float elapsedSec)
+{
+	// banana go up and down
+	const float frequency{ 1.5f };
+	const float amplitude{ 15 };
+
+	g_MainMenuTime += elapsedSec;
+	g_MainMenuBananaVerticalOffset = sinf(g_MainMenuTime * frequency) * amplitude;
+
+	// glow rotate weeee
+	const float rotationSpeed{ 10.f }; // in degrees per second
+	g_MainMenuBananaGlowRotation += rotationSpeed * elapsedSec;
+}
+void UpdateMainMenuButtonsCollision()
+{
+	if (!g_IsSelectingMap)
+	{
+		g_StartGameButton.isHoveringOver = false;
+		if (IsPointInRect(g_StartGameButton.rect, g_MousePosition))
+		{
+			g_StartGameButton.isHoveringOver = true;
+		}
+	}
+	else
+	{
+		for (int i = 0; i < g_AmountOfMaps; ++i)
+		{
+			g_ArrMapsButtons[i].isHoveringOver = false;
+			if (IsPointInRect(g_ArrMapsButtons[i].rect, g_MousePosition))
+			{
+				g_ArrMapsButtons[i].isHoveringOver = true;
+				break;
+			}
+		}
+	}
+}
+void StartGame()
+{
+	g_Cols = GetCurrentGridCols();
+	g_Rows = GetCurrentGridRows();
+	g_BoardTextures = new Texture*[g_Cols * g_Rows] {};
+	g_BoardGrid = GetCurrentBoardGrid();
+	g_CellSize = Point2f{ g_WindowWidth / g_Cols, g_WindowHeight / g_Rows };
+	InitPath();
+	InitPathTextures();
+	StartWave();
+}
+
 void InitPath()
 {
 	int currentRow{ 0 }, currentColumn{ 0 };
@@ -546,6 +783,31 @@ void InitPath()
 
 	delete[] tempPath;
 }
+void InitPathTextures()
+{
+	for (int x = 0; x < g_Cols; ++x)
+	{
+		for (int y = 0; y < g_Rows; ++y)
+		{
+			Texture* curTexture{ nullptr };
+
+			if (g_BoardGrid[y * g_Cols + x] == 0)
+			{
+				curTexture = &g_ArrGrassTextures[GetRand(0, g_AmountOfGrassTextures - 1)];
+			}
+			else if (!g_IsPathMadeOutOfStone)
+			{
+				curTexture = &g_ArrPathTextures[GetRand(0, g_AmountOfPathTextures - 1)];
+			}
+			else
+			{
+				curTexture = &g_StonePathTexture;
+			}
+
+			g_BoardTextures[y * g_Cols + x] = curTexture;
+		}
+	}
+}
 void DrawBoard()
 {
 	Color4f const cPath{ 0.7f, 0.47f, 0.27f, 1.f }, cGround{ 0.52f, 0.82f, 0.48f, 1.f },
@@ -553,20 +815,9 @@ void DrawBoard()
 
 	for (int row = 0; row < g_Rows; ++row) {
 		for (int col = 0; col < g_Cols; ++col) {
-			Rectf currentCell{ col * g_CellSize.x, row * g_CellSize.y, g_CellSize.x, g_CellSize.y };
-			if (g_BoardGrid[row * g_Cols + col] == 1) {
-				utils::SetColor(cPath);
-			}
-			else if (g_BoardGrid[row * g_Cols + col] == 2) {
-				utils::SetColor(cEndPoint);
-			}
-			else if (g_BoardGrid[row * g_Cols + col] == -1) {
-				utils::SetColor(cStartPoint);
-			}
-			else {
-				utils::SetColor(cGround);
-			}
-			utils::FillRect(currentCell);
+			Rectf currentCellRect{ col * g_CellSize.x, row * g_CellSize.y, g_CellSize.x, g_CellSize.y };
+			const Texture texture{ *g_BoardTextures[row * g_Cols + col] };
+			DrawTexture(texture, currentCellRect);
 		}
 	}
 }
@@ -1098,10 +1349,16 @@ void ResizeProjectileArray()
 	}
 
 	//projecttiles
-	Projectile* tempProjectileArray = new Projectile[g_MaxProjectilesOnBoard];
+	Projectile* tempProjectileArray = new Projectile[g_MaxProjectilesOnBoard]{};
 
 	for (int index = 0; index < g_ProjectilesOnBoardAmount; ++index)
 	{
+		if (index >= g_MaxProjectilesOnBoard)
+		{
+			std::cout << "Cannot write more projectiles to the array! Skipping..\n";
+			break;
+		}
+
 		tempProjectileArray[index] = g_ArrProjectiles[index];
 	}
 
@@ -1119,6 +1376,7 @@ void UpdateProjectiles(float elapsedSec)
 			DeletePiercedBloonIds(g_ArrProjectiles[projectileIdx]);
 			SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 			DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+			
 			continue;
 		}
 
@@ -1323,6 +1581,39 @@ float GetRand(float start, float end)
 	return round((start + random * (end - start)) * 100.f) / 100.f;
 }
 
+int GetCurrentGridCols()
+{
+	switch (g_CurrentMapIndex)
+	{
+		case 0:
+			return g_ColsMap0;
+		default:
+			std::cout << "This error is sus\n";
+			return g_ColsMap0;
+	}
+}
+int GetCurrentGridRows()
+{
+	switch (g_CurrentMapIndex)
+	{
+		case 0:
+			return g_RowsMap0;
+		default:
+			std::cout << "This error is sus\n";
+			return g_ColsMap0;
+	}
+}
+int* GetCurrentBoardGrid()
+{
+	switch (g_CurrentMapIndex)
+	{
+	case 0:
+		return g_BoardGridMap0;
+	default:
+		std::cout << "This error is sus\n";
+		return g_BoardGridMap0;
+	}
+}
 Bloon GetBloonFromIndex(int index)
 {
 	switch (index)
