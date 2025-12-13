@@ -350,7 +350,7 @@ Texture g_ArrUIMonkeyTextButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_ArrUIMonkeyBuyButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_TextUICloseBtn{};
 UIButton g_TextUIOpenBtn{};
-int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{30, 50, 80}; //temporary fixed values
+int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{30, 60, 80}; //temporary fixed values
 const Color4f g_GrayOutColor{ 0.f, 0.f, 0.f, 0.8f };
 float g_LosingAnimationProgress{ 0.f };
 Texture g_TextureLosing{};

@@ -854,7 +854,7 @@ void StartWave()
 {
 	++g_CurrentWave;
 	
-	int bloonsHpToSpawn{static_cast<int>( ceil(20 + pow(2.5 * g_CurrentWave,1.5f))) };
+	int bloonsHpToSpawn{static_cast<int>( ceil(20 + pow(2 * g_CurrentWave,1.5f))) };
 	int* arrBloonsToSpawn{ new int[g_AmountOfBloonsTextures] {} };
 	g_TotalAmountOfBloons = 0;
 
@@ -863,8 +863,11 @@ void StartWave()
 	//Randomness
 	int bloonRandomOffsetFactor{};
 	int maxTierOfBloon{};
-
-	if (bloonsHpToSpawn  < 40)
+	if (bloonsHpToSpawn < 30) {
+		bloonRandomOffsetFactor = 0;
+		maxTierOfBloon = 1;
+	}
+	else if (bloonsHpToSpawn  < 40)
 	{
 		bloonRandomOffsetFactor = 1;
 		maxTierOfBloon = 2;
@@ -991,7 +994,7 @@ void StartWave()
 
 void RestartGame()
 {
-	g_Money = 20;
+	g_Money = 50;
 	g_CurrentWave = 0;
 	g_PlayerHp = 10;
 	g_LosingAnimationProgress = 0.f;
