@@ -424,7 +424,7 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         1
     },
     MonkeyUpgrade{
-        100,     //cost
+        125,     //cost
         1,      //damage
         2,      //pierce
         1,      //radius
@@ -452,7 +452,7 @@ MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         ProjectileBehaviour::HomingBoomerang
     },
     MonkeyUpgrade{
-        225,     //cost
+        250,     //cost
         0,      //damage
         7,      //pierce
         1,      //radius
@@ -467,24 +467,24 @@ MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
 //Tack
 MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        150,     //cost
+        200,     //cost
         0,      //damage
         10,      //pierce
         2,      //radius
         25,      //detect radius
         0,      //home radius
-        0.25f,    //firerate
+        0.1f,    //firerate
         2,      //speed
         0       //lifetime
     },
     MonkeyUpgrade{
-        300,     //cost
+        400,     //cost
         1,      //damage
         0,      //pierce
         1,      //radius
         25,      //detect radius
         0,      //home radius
-        0.25f,    //firerate
+        0.1f,    //firerate
         2,      //speed
         100       //lifetime
     }
