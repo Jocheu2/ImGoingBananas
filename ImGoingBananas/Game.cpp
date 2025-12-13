@@ -182,6 +182,14 @@ void Start()
 	{
 		std::cout << "ERROR! Failed to load the texture!\n";
 	}
+	if (!TextureFromString("Banana Patch", "Resources/Fonts/Calistoga-Regular.ttf", g_FontSize, Color4f{ 1, 1, 1, 1 }, g_ArrMapsNames[1]))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
+	if (!TextureFromString("West-Vlaanderen", "Resources/Fonts/Calistoga-Regular.ttf", g_FontSize, Color4f{ 1, 1, 1, 1 }, g_ArrMapsNames[2]))
+	{
+		std::cout << "ERROR! Failed to load the texture!\n";
+	}
 
 	//Font numbers
 	for (int i = 0; i < 10; ++i)
@@ -613,7 +621,7 @@ void DrawMainMenu()
 	if (!g_IsSelectingMap)
 		return;
 
-	const float selectingMapBGWidth{ 600 };
+	const float selectingMapBGWidth{ 800 };
 	const float selectingMapBGHeight{ 400 };
 	const Rectf selectingMapBGRect{ g_WindowWidth * 0.5f - selectingMapBGWidth * 0.5f, g_WindowHeight * 0.5f - selectingMapBGHeight * 0.5f,
 		selectingMapBGWidth, selectingMapBGHeight };
@@ -686,6 +694,8 @@ void UpdateMainMenuButtonsCollision()
 }
 void StartGame()
 {
+	g_CurrentMapIndex = 2;
+	std::cout << "AAA";
 	g_Cols = GetCurrentGridCols();
 	g_Rows = GetCurrentGridRows();
 	g_BoardTextures = new Texture*[g_Cols * g_Rows] {};
@@ -1585,6 +1595,10 @@ int GetCurrentGridCols()
 	{
 		case 0:
 			return g_ColsMap0;
+		case 1:
+			return g_ColsMap1;
+		case 2:
+			return g_ColsMap2;
 		default:
 			std::cout << "This error is sus\n";
 			return g_ColsMap0;
@@ -1596,6 +1610,10 @@ int GetCurrentGridRows()
 	{
 		case 0:
 			return g_RowsMap0;
+		case 1:
+			return g_RowsMap1;
+		case 2:
+			return g_RowsMap2;
 		default:
 			std::cout << "This error is sus\n";
 			return g_ColsMap0;
@@ -1607,6 +1625,10 @@ int* GetCurrentBoardGrid()
 	{
 	case 0:
 		return g_BoardGridMap0;
+	case 1:
+		return g_BoardGridMap1;
+	case 2:
+		return g_BoardGridMap2;
 	default:
 		std::cout << "This error is sus\n";
 		return g_BoardGridMap0;

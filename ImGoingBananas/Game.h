@@ -24,8 +24,10 @@ int g_Cols{}, g_Rows{};
 int* g_BoardGrid{ nullptr };
 int g_CurrentMapIndex{};
 //subsection: maps
-const int g_AmountOfMaps{ 1 };
+const int g_AmountOfMaps{ 3 };
 int const g_ColsMap0{ 8 }, g_RowsMap0{ 6 };
+int const g_ColsMap1{ 8 }, g_RowsMap1{ 6 };
+int const g_ColsMap2{ 8 }, g_RowsMap2{ 6 };
 int g_BoardGridMap0[g_ColsMap0 * g_RowsMap0]{
     0,1,1,1,0,0,0,0,
     0,1,0,1,1,1,1,0,
@@ -33,6 +35,22 @@ int g_BoardGridMap0[g_ColsMap0 * g_RowsMap0]{
     0,1,0,1,1,1,1,0,
     -1,1,0,1,0,0,0,0,
     0,0,0,1,1,1,1,2 };
+int g_BoardGridMap1[g_ColsMap1 * g_RowsMap1]{
+    0,0,0,1,1,1,1,2,
+    -1,1,0,1,0,0,0,0,
+    0,1,0,1,1,0,0,0,
+    0,1,1,0,1,1,1,1,
+    0,0,1,1,0,0,0,1,
+    0,0,0,1,1,1,1,1
+};
+int g_BoardGridMap2[g_ColsMap2 * g_ColsMap2]{
+    0,1,1,1,1,1,1,0,
+    0,1,0,0,0,0,1,0,
+    -1,1,0,0,0,0,1,0,
+    0,0,0,1,1,1,1,0,
+    0,0,0,1,0,0,0,0,
+    0,0,0,1,1,1,1,2
+};
 Texture** g_BoardTextures{}; // create on heap 
 const bool g_IsPathMadeOutOfStone{ false };
 
@@ -144,7 +162,7 @@ const Bloon blueBloon{
     0,
     2,
     1,
-    125.f,
+    100.f,
     Point2f{}
 };
 const Bloon greenBloon{
@@ -152,7 +170,7 @@ const Bloon greenBloon{
     0,
     2,
     2,
-    150.f,
+    125.f,
     Point2f{}
 };
 const Bloon yellowBloon{
