@@ -138,15 +138,15 @@ const Bloon redBloon{
 const Bloon blueBloon{
     2,
     0,
+    2,
     1,
-    1,
-    100.f,
+    125.f,
     Point2f{}
 };
 const Bloon greenBloon{
     3,
     0,
-    1,
+    2,
     2,
     150.f,
     Point2f{}
@@ -154,17 +154,49 @@ const Bloon greenBloon{
 const Bloon yellowBloon{
     4,
     0,
-    1,
     3,
-    100.f,
+    3,
+    150.f,
     Point2f{}
 };
 const Bloon pinkBloon{ //Wanted to try a concept where a bloon tier has 2 hp
     5,
     0,
-    1,
+    3,
     4,
-    100.f,
+    175.f,
+    Point2f{}
+};
+const Bloon whiteBloon{
+    6,
+    0,
+    4,
+    5,
+    150.f,
+    Point2f{}
+};
+const Bloon blackBloon{
+    7,
+    0,
+    4,
+    6,
+    150.f,
+    Point2f{}
+};
+const Bloon zebraBloon{
+    8,
+    0,
+    4,
+    7,
+    175.f,
+    Point2f{}
+};
+const Bloon gayBloon{
+    9,
+    0,
+    5,
+    8,
+    200.f,
     Point2f{}
 };
 const Bloon nullBloon{
@@ -182,7 +214,7 @@ const Projectile Dart{
     0,
     1,
     20,
-    200.f,
+    250.f,
     0,
     800.f,
     0,
@@ -261,7 +293,7 @@ const Monkey dartMonkey{
     Dart,
     100.f,
     50.f,
-    0.5f
+    0.75f
 };
 const Monkey boomerangMonkey{
     1,
@@ -301,6 +333,7 @@ const int g_RescaledTextPixelSize{ 7 };
 
 //UI
 int g_Money{ 200 };
+int g_PlayerHp{ 10 };
 Point2f g_MousePosition{};
 bool g_IsUIActive{};
 float g_UIShopShiftTransition{};
@@ -314,6 +347,8 @@ UIButton g_TextUICloseBtn{};
 UIButton g_TextUIOpenBtn{};
 int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{10, 30, 50}; //temporary fixed values
 const Color4f g_GrayOutColor{ 0.f, 0.f, 0.f, 0.8f };
+float g_LosingAnimationProgress{ 0.f };
+Texture g_TextureLosing{};
 
 Texture g_MoneyIcon{};
 Texture g_ArrNumbers[10]{};
@@ -349,9 +384,9 @@ float g_UINextWaveShiftTransition{};
 //Dart
 MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        15,     //cost
+        50,     //cost
         0,      //damage
-        1,      //pierce
+        2,      //pierce
         2,      //radius
         0,      //detect radius
         0,      //home radius
@@ -361,7 +396,7 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
         1
     },
     MonkeyUpgrade{
-        50,     //cost
+        100,     //cost
         1,      //damage
         2,      //pierce
         1,      //radius
@@ -376,27 +411,27 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
 //Boomerang
 MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        40,     //cost
+        100,     //cost
         0,      //damage
         5,      //pierce
         5,      //radius
         50,     //detect radius
         200,    //home radius
         0.1f,      //firerate
-        300,      //speed
+        200,      //speed
         200,       //lifetime
         4,
         ProjectileBehaviour::HomingBoomerang
     },
     MonkeyUpgrade{
-        60,     //cost
-        1,      //damage
+        225,     //cost
+        0,      //damage
         7,      //pierce
         1,      //radius
         0,      //detect radius
         100,      //home radius
         1.f,      //firerate
-        200,      //speed
+        100,      //speed
         200,       //lifetime
         5
     }
@@ -404,28 +439,26 @@ MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
 //Tack
 MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        50,     //cost
+        150,     //cost
         0,      //damage
         10,      //pierce
         2,      //radius
-        0,      //detect radius
+        25,      //detect radius
         0,      //home radius
         0.25f,    //firerate
         2,      //speed
         0       //lifetime
     },
     MonkeyUpgrade{
-        80,     //cost
-        2,      //damage
+        300,     //cost
+        1,      //damage
         0,      //pierce
         1,      //radius
-        0,      //detect radius
+        25,      //detect radius
         0,      //home radius
         0.25f,    //firerate
         2,      //speed
-        0,       //lifetime
-        -1,
-        ProjectileBehaviour::Ring
+        100       //lifetime
     }
 };
 
@@ -444,6 +477,7 @@ void DrawBloons();
 void DrawMonkeys();
 
 void StartWave();
+void RestartGame();
 
 void DrawUI();
 void UpdateUIShopMenu(float elapsedSec);
@@ -453,6 +487,7 @@ void UpdateUIButtonCollisions();
 void DrawPreviewMonkey();
 float DrawNumberSequenceTopCenter(int number, const Point2f& topCenter); //returns width
 float DrawNumberSequenceTopLeft(int number, Point2f topLeft); //returns width
+void DrawLosingScreen();
 
 void SpawnBloon(const Point2f& spawnPoint, Bloon& bloon, int index);
 void DestroyBloon(Bloon& bloon);
