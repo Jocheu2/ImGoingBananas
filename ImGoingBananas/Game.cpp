@@ -87,15 +87,6 @@ void Start()
 	g_NextWaveBtn.rect.width = g_NextWaveBtn.texture.width;
 	g_NextWaveBtn.rect.height = g_NextWaveBtn.texture.height;
 
-	if (!TextureFromFile("Resources/UI/BG.png", g_TextUIBackground))
-	{
-		std::cout << "ERROR! Failed to load the texture!\n";
-	}
-	if (!TextureFromFile("Resources/UI/BGUpgrades.png", g_TextUIUpgradesBackground))
-	{
-		std::cout << "ERROR! Failed to load the texture!\n";
-	}
-
 	if (!TextureFromFile("Resources/UI/buyUpgradeBtn.png", g_ArrBuyUpgradeBtn[0].texture))
 	{
 		std::cout << "ERROR! Failed to load the texture!\n";
@@ -248,8 +239,6 @@ void End()
 		DeleteTexture(g_ArrNumbers[i]);
 	}
 
-	DeleteTexture(g_TextUIBackground);
-	DeleteTexture(g_TextUIUpgradesBackground);
 	DeleteTexture(g_TextUICloseBtn.texture);
 	DeleteTexture(g_TextUIOpenBtn.texture);
 	DeleteTexture(g_ArrBuyUpgradeBtn[0].texture);
@@ -350,7 +339,7 @@ void OnMouseDownEvent(const SDL_MouseButtonEvent& e)
 
 	if (!g_IsPreviewOn)
 	{
-		const Rectf upgradesUIBG{ 0, g_WindowHeight - g_TextUIUpgradesBackground.height, g_TextUIUpgradesBackground.width, g_TextUIUpgradesBackground.height };
+		const Rectf upgradesUIBG{ 0, g_WindowHeight - g_UpgradesBGHeight, g_UIBackgroundWidth, g_UpgradesBGHeight };
 
 		if(g_IsMonkeySelected && !IsPointInRect(upgradesUIBG, g_MousePosition))
 			g_IsMonkeySelected = false;
@@ -368,7 +357,7 @@ void OnMouseDownEvent(const SDL_MouseButtonEvent& e)
 
 			if (IsPointInCircle(monkeyCollider, g_MousePosition))
 			{
-				if (g_IsUIActive && g_MousePosition.x > g_WindowWidth - g_TextUIBackground.width)
+				if (g_IsUIActive && g_MousePosition.x > g_WindowWidth - g_UIBackgroundWidth)
 					break;
 
 				g_IsMonkeySelected = true;
@@ -879,9 +868,11 @@ void DrawMonkeys()
 {
 	for (int index = 0; index < g_MonkeysOnBoard; ++index) {
 		const Texture monkeyTexture = g_ArrMonkeyTextures[g_ArrMonkeys[index].monkeyId * g_AmountOfUpgradesPerMonkey + g_ArrMonkeys[index].monkeyUpgradeTier];
-		const Point2f placementPosition{
-			g_ArrMonkeys[index].position.x - monkeyTexture.width * 0.5f,
-			g_ArrMonkeys[index].position.y - monkeyTexture.height * 0.5f
+		const Rectf placementRect{
+			g_ArrMonkeys[index].position.x - monkeyTexture.width / g_CurrentTextPixelSize * g_RescaledTextPixelSize * 0.5f,
+			g_ArrMonkeys[index].position.y - monkeyTexture.height / g_CurrentTextPixelSize * g_RescaledTextPixelSize * 0.5f,
+			monkeyTexture.width / g_CurrentTextPixelSize * g_RescaledTextPixelSize,
+			monkeyTexture.height / g_CurrentTextPixelSize * g_RescaledTextPixelSize
 		};
 
 		// Draw detection range only if monkey is selected
@@ -895,13 +886,17 @@ void DrawMonkeys()
 
 		// Draw monkey
 		const float angle{ atan2f(g_ArrMonkeys[index].targetPosition.y - g_ArrMonkeys[index].position.y, g_ArrMonkeys[index].targetPosition.x - g_ArrMonkeys[index].position.x) * g_Rad2Deg - 90 };
-		DrawTexture(monkeyTexture, placementPosition, angle);
+		DrawTexture(monkeyTexture, placementRect, angle);
 	}
 }
 void DrawPreviewMonkey()
 {
-	const Point2f previewTopLeft{ g_MousePosition.x - g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2].width / 2,
-		g_MousePosition.y - g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2].height / 2 };
+	const Rectf previewRect{ 
+		g_MousePosition.x - g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2].width / g_CurrentTextPixelSize * g_RescaledTextPixelSize * 0.5f,
+		g_MousePosition.y - g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2].height / g_CurrentTextPixelSize * g_RescaledTextPixelSize * 0.5f,
+		g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2].width / g_CurrentTextPixelSize * g_RescaledTextPixelSize,
+		g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2].height / g_CurrentTextPixelSize * g_RescaledTextPixelSize
+	};
 
 	// Draw detection radius preview
 	utils::SetColor(1.f, 1.f, 1.f, 0.5f);
@@ -912,11 +907,11 @@ void DrawPreviewMonkey()
 	// Draw texture
 	if (g_CanPlaceMonkey) 
 	{
-		DrawTexture(g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2], previewTopLeft);
+		DrawTexture(g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2], previewRect);
 	}
 	else 
 	{
-		DrawTexture(g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2 + 1], previewTopLeft);
+		DrawTexture(g_ArrPreviewMonkeyTextures[g_PreviewMonkeyId * 2 + 1], previewRect);
 	}
 
 }
@@ -1055,12 +1050,13 @@ void DrawProjectiles()
 		const Texture projectileTexture{
 			g_ArrProjectileTextures[g_ArrProjectiles[index].spriteId]
 		};
-		const Rectf projectileTexturePosition{
-			centerOfProjectile.x - projectileTexture.width * 0.5f,
-			centerOfProjectile.y - projectileTexture.height * 0.5f,
-			projectileTexture.width,
-			projectileTexture.height
+		const Rectf projectileTextureRect{
+			centerOfProjectile.x - projectileTexture.width / g_CurrentTextPixelSize * g_RescaledTextPixelSize * 0.5f,
+			centerOfProjectile.y - projectileTexture.height / g_CurrentTextPixelSize * g_RescaledTextPixelSize * 0.5f,
+			projectileTexture.width / g_CurrentTextPixelSize * g_RescaledTextPixelSize,
+			projectileTexture.height / g_CurrentTextPixelSize * g_RescaledTextPixelSize
 		};
+
 		float angle{};
 		if(g_ArrProjectiles[index].behaviour != ProjectileBehaviour::Boomerang && 
 			g_ArrProjectiles[index].behaviour != ProjectileBehaviour::HomingBoomerang) 
@@ -1069,7 +1065,7 @@ void DrawProjectiles()
 		}
 		else 
 		{
-			const int amountOfBoomerangSpins{ g_ArrProjectiles[index].maxPierce };
+			const float amountOfBoomerangSpins{ 1 + (g_ArrProjectiles[index].maxPierce - g_ArrProjectiles[index].bloonsPierced) * 0.1f };
 			angle = atan2f(g_ArrProjectiles[index].direction.y, g_ArrProjectiles[index].direction.x) * g_Rad2Deg 
 				+ g_ArrProjectiles[index].timer / g_ArrProjectiles[index].lifetime * 360.f * amountOfBoomerangSpins;
 		}
@@ -1078,7 +1074,7 @@ void DrawProjectiles()
 
 		//utils::SetColor(1.f, 1.f, 1.f, 1.f);
 		//utils::DrawEllipse(centerOfProjectile, colliderRadius, colliderRadius);
-		utils::DrawTexture(projectileTexture, projectileTexturePosition, angle);
+		utils::DrawTexture(projectileTexture, projectileTextureRect, angle);
 	}
 }
 void DeleteProjectile(Projectile& projectile) {
@@ -1120,6 +1116,26 @@ void UpdateProjectiles(float elapsedSec)
 		g_ArrProjectiles[projectileIdx].timer += elapsedSec * 1000;
 
 		if (g_ArrProjectiles[projectileIdx].timer >= g_ArrProjectiles[projectileIdx].lifetime) {
+			DeletePiercedBloonIds(g_ArrProjectiles[projectileIdx]);
+			SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+			DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+			continue;
+		}
+
+		//Check if projectile is out of the map
+		if (g_ArrProjectiles[projectileIdx].position.x <= -g_ProjectileOutOfTheMapGraceDistance || 
+			g_ArrProjectiles[projectileIdx].position.x >= g_WindowWidth + g_ProjectileOutOfTheMapGraceDistance)
+		{
+			//Delete the projectile
+			DeletePiercedBloonIds(g_ArrProjectiles[projectileIdx]);
+			SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+			DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
+			continue;
+		}
+		else if (g_ArrProjectiles[projectileIdx].position.y <= -g_ProjectileOutOfTheMapGraceDistance ||
+			g_ArrProjectiles[projectileIdx].position.y >= g_WindowHeight + g_ProjectileOutOfTheMapGraceDistance)
+		{
+			//Delete the projectile
 			DeletePiercedBloonIds(g_ArrProjectiles[projectileIdx]);
 			SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
 			DeleteProjectile(g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
@@ -1392,12 +1408,21 @@ MonkeyUpgrade* GetMonkeyUpgradesFromIndex(int index)
 void DrawUI()
 {
 	// Shop menu
+
 	const float UIButtonsInitialOffset{ g_MoneyIcon.height * 3.f / 2.f };
 	const float UIButtonsVerticalOffset{ g_WindowHeight / g_AmountOfMonkeyBuyButtons };
-	const Point2f UIShopTopLeft{ g_UIShopHorizontalOffset + g_WindowWidth - g_TextUIBackground.width, 0 };
-	const Point2f UIShopTopCenter{ g_UIShopHorizontalOffset + g_WindowWidth - g_TextUIBackground.width / 2.f, 0 };
+	const Point2f UIShopTopLeft{ g_UIShopHorizontalOffset + g_WindowWidth - g_UIBackgroundWidth, 0 };
+	const Point2f UIShopTopCenter{ g_UIShopHorizontalOffset + g_WindowWidth - g_UIBackgroundWidth / 2.f, 0 };
 
-	DrawTexture(g_TextUIBackground, UIShopTopLeft);
+	const Rectf shopBGRect{ UIShopTopLeft.x, UIShopTopLeft.y, g_WindowWidth - UIShopTopLeft.x, g_WindowHeight };
+	const Color4f shopBGColor{ 72.f / 255.f, 42.f / 255.f, 21.f / 255.f, 1.f };
+	const Rectf shopBGOutlineRect{ UIShopTopLeft.x, UIShopTopLeft.y + g_TextUIOpenBtn.rect.height, g_RescaledTextPixelSize, g_WindowHeight - UIShopTopLeft.y - g_TextUIOpenBtn.rect.height };
+	const Color4f shopBGOutlineColor{ 12.f / 255.f, 12.f / 255.f, 12.f / 255.f, 1.f };
+	utils::SetColor(shopBGColor);
+	utils::FillRect(shopBGRect);
+
+	utils::SetColor(shopBGOutlineColor);
+	utils::FillRect(shopBGOutlineRect);
 
 	// Draw open / close buttons
 	const Point2f UIOpenCloseBtnPos{ UIShopTopLeft.x - g_TextUICloseBtn.rect.width, UIShopTopLeft.y };
@@ -1406,7 +1431,7 @@ void DrawUI()
 	g_TextUIOpenBtn.rect.top = UIOpenCloseBtnPos.y;
 	g_TextUICloseBtn.rect.top = UIOpenCloseBtnPos.y;
 
-	if(!g_IsUIActive)
+	if (!g_IsUIActive)
 		DrawTexture(g_TextUIOpenBtn.texture, UIOpenCloseBtnPos);
 	else
 		DrawTexture(g_TextUICloseBtn.texture, UIOpenCloseBtnPos);
@@ -1438,10 +1463,15 @@ void DrawUI()
 	}
 
 	// Upgrades menu
-	const Point2f UIUpgradeTopLeft{ -g_UIUpgradeHorizontalOffset, g_WindowHeight - g_TextUIUpgradesBackground.height };
-	const Point2f UIUpgradeTopCenter{ -g_UIUpgradeHorizontalOffset + g_TextUIUpgradesBackground.width / 2.f, g_WindowHeight - g_TextUIUpgradesBackground.height };
+	const Point2f UIUpgradeTopLeft{ -g_UIUpgradeHorizontalOffset, g_WindowHeight - g_UpgradesBGHeight };
+	const Point2f UIUpgradeTopCenter{ -g_UIUpgradeHorizontalOffset + g_UIBackgroundWidth / 2.f, g_WindowHeight - g_UpgradesBGHeight };
+	const Rectf upgradesBGRect{ UIUpgradeTopLeft.x, UIUpgradeTopLeft.y, g_UIBackgroundWidth, g_WindowHeight - UIUpgradeTopLeft.y };
+	const Rectf upgradesBGOutlineRect{ UIUpgradeTopLeft.x + upgradesBGRect.width - g_RescaledTextPixelSize, UIUpgradeTopLeft.y, g_RescaledTextPixelSize, upgradesBGRect.height };
+	utils::SetColor(shopBGColor);
+	utils::FillRect(upgradesBGRect);
 
-	DrawTexture(g_TextUIUpgradesBackground, UIUpgradeTopLeft);
+	utils::SetColor(shopBGOutlineColor);
+	utils::FillRect(upgradesBGOutlineRect);
 
 	if (g_MonkeysOnBoard > 0)
 	{
@@ -1450,12 +1480,12 @@ void DrawUI()
 		DrawTexture(currentMonkeyName, currentMonkeyNameTopLeft);
 
 		const UIButton monkeyPreview{ g_ArrUIMonkeyBuyButtons[g_ArrMonkeys[g_SelectedMonkeyId].monkeyId] };
-		const Point2f previewMonkeyTopLeft = Point2f{ UIUpgradeTopCenter.x - monkeyPreview.rect.width / 2.f, UIUpgradeTopCenter.y + monkeyPreview.rect.height / 4.f };
+		const Point2f previewMonkeyTopLeft = Point2f{ UIUpgradeTopCenter.x - monkeyPreview.rect.width / 2.f, currentMonkeyNameTopLeft.y + monkeyPreview.rect.height / 4.f };
 		DrawTexture(monkeyPreview.texture, previewMonkeyTopLeft);
 
 		const Texture currentUpgradeTexture{ g_ArrUIUpgradeText[g_ArrMonkeys[g_SelectedMonkeyId].monkeyUpgradeTier] };
 		const Point2f currentUpgradeTextTopLeft{ UIUpgradeTopCenter.x - currentUpgradeTexture.width / 2.f,
-			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f };
+			previewMonkeyTopLeft.y + monkeyPreview.rect.height };
 		DrawTexture(currentUpgradeTexture, currentUpgradeTextTopLeft);
 
 		UIButton* buyButton{ &g_ArrBuyUpgradeBtn[0] };
@@ -1466,7 +1496,7 @@ void DrawUI()
 		}
 
 		const Point2f buyButtonTopLeft{ UIUpgradeTopCenter.x - (*buyButton).rect.width / 2.f,
-			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + (*buyButton).rect.height };
+			currentUpgradeTextTopLeft.y + (*buyButton).rect.height };
 		(*buyButton).rect.left = buyButtonTopLeft.x;
 		(*buyButton).rect.top = buyButtonTopLeft.y;
 
@@ -1474,7 +1504,7 @@ void DrawUI()
 
 		int cost{ GetMonkeyUpgradesFromIndex(g_ArrMonkeys[g_SelectedMonkeyId].monkeyId)[g_ArrMonkeys[g_SelectedMonkeyId].monkeyUpgradeTier].cost };
 		const Point2f costTextTopCenter{ UIUpgradeTopCenter.x + g_MoneyIcon.width / 2.f,
-			UIUpgradeTopCenter.y + monkeyPreview.rect.height * 5.f / 4.f + (*buyButton).rect.height * 2 };
+			currentUpgradeTextTopLeft.y + (*buyButton).rect.height * 2 };
 		const float costTextWidth{ DrawNumberSequenceTopCenter(cost, costTextTopCenter) };
 
 		const Point2f moneyIconTopLeft{ costTextTopCenter.x - g_MoneyIcon.width - costTextWidth, costTextTopCenter.y };
@@ -1517,29 +1547,29 @@ void UpdateUIShopMenu(float elapsedSec)
 
 	if (!g_IsUIActive)
 	{
-		if (g_UIShopShiftTransition == g_TextUIBackground.width)
+		if (g_UIShopShiftTransition == g_UIBackgroundWidth)
 			return;
 
-		g_UIShopShiftTransition += g_TextUIBackground.width * transitionSpeedScalar * elapsedSec;
+		g_UIShopShiftTransition += g_UIBackgroundWidth * transitionSpeedScalar * elapsedSec;
 
-		if (g_UIShopShiftTransition > g_TextUIBackground.width)
-			g_UIShopShiftTransition = g_TextUIBackground.width;
+		if (g_UIShopShiftTransition > g_UIBackgroundWidth)
+			g_UIShopShiftTransition = g_UIBackgroundWidth;
 
-		const float t{ g_UIShopShiftTransition / g_TextUIBackground.width };
-		g_UIShopHorizontalOffset = g_TextUIBackground.width * t;
+		const float t{ g_UIShopShiftTransition / g_UIBackgroundWidth };
+		g_UIShopHorizontalOffset = g_UIBackgroundWidth * t;
 	}
 	else
 	{
 		if (g_UIShopShiftTransition == 0)
 			return;
 		
-		g_UIShopShiftTransition -= g_TextUIBackground.width * transitionSpeedScalar * elapsedSec;
+		g_UIShopShiftTransition -= g_UIBackgroundWidth * transitionSpeedScalar * elapsedSec;
 
 		if (g_UIShopShiftTransition < 0)
 			g_UIShopShiftTransition = 0;
 		
-		const float t{ g_UIShopShiftTransition / g_TextUIBackground.width };
-		g_UIShopHorizontalOffset = g_TextUIBackground.width * powf(t, 2);
+		const float t{ g_UIShopShiftTransition / g_UIBackgroundWidth };
+		g_UIShopHorizontalOffset = g_UIBackgroundWidth * powf(t, 2);
 	}
 }
 void UpdateUIUpgradeMenu(float elapsedSec)
@@ -1548,29 +1578,29 @@ void UpdateUIUpgradeMenu(float elapsedSec)
 
 	if (!g_IsMonkeySelected)
 	{
-		if (g_UIUpgradeShiftTransition == g_TextUIUpgradesBackground.width)
+		if (g_UIUpgradeShiftTransition == g_UIBackgroundWidth)
 			return;
 
-		g_UIUpgradeShiftTransition += g_TextUIUpgradesBackground.width * transitionSpeedScalar * elapsedSec;
+		g_UIUpgradeShiftTransition += g_UIBackgroundWidth * transitionSpeedScalar * elapsedSec;
 
-		if (g_UIUpgradeShiftTransition > g_TextUIUpgradesBackground.width)
-			g_UIUpgradeShiftTransition = g_TextUIUpgradesBackground.width;
+		if (g_UIUpgradeShiftTransition > g_UIBackgroundWidth)
+			g_UIUpgradeShiftTransition = g_UIBackgroundWidth;
 
-		const float t{ g_UIUpgradeShiftTransition / g_TextUIUpgradesBackground.width };
-		g_UIUpgradeHorizontalOffset = g_TextUIUpgradesBackground.width * t;
+		const float t{ g_UIUpgradeShiftTransition / g_UIBackgroundWidth };
+		g_UIUpgradeHorizontalOffset = g_UIBackgroundWidth * t;
 	}
 	else
 	{
 		if (g_UIUpgradeShiftTransition == 0)
 			return;
 
-		g_UIUpgradeShiftTransition -= g_TextUIUpgradesBackground.width * transitionSpeedScalar * elapsedSec;
+		g_UIUpgradeShiftTransition -= g_UIBackgroundWidth * transitionSpeedScalar * elapsedSec;
 
 		if (g_UIUpgradeShiftTransition < 0)
 			g_UIUpgradeShiftTransition = 0;
 
-		const float t{ g_UIUpgradeShiftTransition / g_TextUIUpgradesBackground.width };
-		g_UIUpgradeHorizontalOffset = g_TextUIUpgradesBackground.width * powf(t, 2);
+		const float t{ g_UIUpgradeShiftTransition / g_UIBackgroundWidth };
+		g_UIUpgradeHorizontalOffset = g_UIBackgroundWidth * powf(t, 2);
 	}
 }
 void UpdateUINextWave(float elapsedSec)
