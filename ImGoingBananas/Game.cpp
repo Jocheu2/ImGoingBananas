@@ -227,11 +227,7 @@ void Start()
 		std::cout << "ERROR! Failed to load the texture!\n";
 	}
 
-	std::cout << "\033[33m Welcome to 'I'm going Bananas! Your goal is to not let any of bloons on board reach your base\n";
-	std::cout << "You can open menu to buy monkeys by pressing the 'TAB' key. Don't forget to keep enough money for it!\n";
-	std::cout << "You may upgrade by selecting a monkey already on field and pressing UPGRAGE button!\n";
-	std::cout << "You may also sell the monkey to refund a part of the cost and free up the space on board!\n";
-	std::cout << "Good luck \n\n This Project was Developed by The Them \033[0m\n";
+	
   
   //Turn off 'g_IsMainMenuActive' for debugging purposes
 	//StartGame();
@@ -387,6 +383,17 @@ void OnKeyDownEvent(SDL_Keycode key)
 {
 	if (key == SDLK_r) {
 		RestartGame();
+	}
+
+	if (key == SDLK_i) {
+		std::cout << "\033[33m Welcome to 'I'm going Bananas! Your goal is to not let any of bloons on board reach your base\n";
+		std::cout << "You can open menu to buy monkeys by pressing the 'TAB' key. Don't forget to keep enough money for it!\n";
+		std::cout << "To exit preview mode, press 'esc' key\n";
+		std::cout << "You may upgrade by selecting a monkey already on field and pressing UPGRAGE button!\n";
+		std::cout << "To close upgrade menu, click the game window anywhere else than the upgrade screen\n";
+		std::cout << "You may also sell the monkey to refund a part of the cost and free up the space on board!\n";
+		std::cout << "To return to main menu use the 'm' key or retry the stage from beginning by pressing the 'r' key\n";
+		std::cout << "Good luck \n\n This Project was Developed by The Them (Joachim Psuty-Lipski and Egor Tatarli) from group GD14 \033[0m\n";
 	}
 }
 
