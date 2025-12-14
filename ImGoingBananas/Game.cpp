@@ -1045,6 +1045,8 @@ void RestartGame()
 	g_IsMonkeySelected = 0;
 	g_SelectedMonkeyId = 0;
 	g_TotalAmountOfBloons = 0;
+	g_BloonSpeedScalar =  1 ;
+	g_MoneyReductionScalar = 1;
 
 	for (int i{}; i < g_ProjectilesOnBoardAmount; ++i) {
 		if (g_ArrProjectiles[i].maxPierce > 0 &&
