@@ -336,7 +336,7 @@ const int g_RescaledTextPixelSize{ 7 };
 
 //UI
 int g_Money{ 50 };
-int g_PlayerHp{ 10 };
+int g_PlayerHp{ 30 };
 const int g_MaxPlayerHp{ g_PlayerHp };
 Point2f g_MousePosition{};
 bool g_IsUIActive{};
