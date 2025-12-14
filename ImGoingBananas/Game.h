@@ -237,8 +237,8 @@ const Projectile Dart{
     20,
     500.f,
     0,
-    800.f,
-    0,
+    500.f,
+    1,
     ProjectileBehaviour::Dart
 };
 const float g_BoomerangSwingRadius{ 75.f };
@@ -350,7 +350,7 @@ Texture g_ArrUIMonkeyTextButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_ArrUIMonkeyBuyButtons[g_AmountOfMonkeyBuyButtons]{};
 UIButton g_TextUICloseBtn{};
 UIButton g_TextUIOpenBtn{};
-int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{30, 60, 80}; //temporary fixed values
+int g_ArrUIMonkeyPrices[g_AmountOfMonkeyBuyButtons]{30, 40, 80}; //temporary fixed values
 const Color4f g_GrayOutColor{ 0.f, 0.f, 0.f, 0.8f };
 float g_LosingAnimationProgress{ 0.f };
 Texture g_TextureLosing{};
@@ -393,25 +393,25 @@ float g_UINextWaveShiftTransition{};
 //Dart
 MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        60,     //cost
+        100,     //cost
         0,      //damage
         2,      //pierce
         0,      //radius
-        0,      //detect radius
+        40,      //detect radius
         0,      //home radius
         0.25f,   //firerate
         50.f,      //speed
-        -200.f,       //lifetime
+        100.f,       //lifetime
         1
     },
     MonkeyUpgrade{
-        600,     //cost
+        700,     //cost
         1,      //damage
-        2,      //pierce
+        1,      //pierce
         0,      //radius
         15,      //detect radius
         0,      //home radius
-        0,      //firerate
+        0.5f,      //firerate
         25.f,      //speed
         100.f,       //lifetime
         2
@@ -420,27 +420,26 @@ MonkeyUpgrade g_ArrDartUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
 //Boomerang
 MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        110,     //cost
+        150,     //cost
         0,      //damage
-        2,      //pierce
+        3,      //pierce
         5,      //radius
         50,     //detect radius
-        200,    //home radius
-        0.1f,      //firerate
-        250,      //speed
-        200,       //lifetime
-        4,
-        ProjectileBehaviour::HomingBoomerang
+        0,    //home radius
+        0.5f,      //firerate
+        0,      //speed
+        0,       //lifetime
+        4
     },
     MonkeyUpgrade{
-        1300,     //cost
+        1100,     //cost
         1,      //damage
-        5,      //pierce
+        10,      //pierce
         1,      //radius
-        0,      //detect radius
-        100,      //home radius
-        -0.5f,      //firerate
-        600,      //speed
+        20,      //detect radius
+        150,      //home radius
+        0.5f,      //firerate
+        500,      //speed
         500,       //lifetime
         5,
         ProjectileBehaviour::HomingBoomerang
@@ -449,24 +448,24 @@ MonkeyUpgrade g_ArrBoomerangUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
 //Tack
 MonkeyUpgrade g_ArrTackUpgrades[g_AmountOfUpgradesPerMonkey - 1]{
     MonkeyUpgrade{
-        200,     //cost
+        250,     //cost
         0,      //damage
-        2,      //pierce
+        0,      //pierce
         0,      //radius
         10,      //detect radius
         0,      //home radius
-        0.1f,    //firerate
+        0.5f,    //firerate
         25,      //speed
         0       //lifetime
     },
     MonkeyUpgrade{
-        700,     //cost
-        1,      //damage
-        10,      //pierce
+        800,     //cost
+        2,      //damage
+        20,      //pierce
         0,      //radius
         12.5f,      //detect radius
         0,      //home radius
-        0.1f,    //firerate
+        0.2f,    //firerate
         0,      //speed
         0,       //lifetime
         -1,
@@ -497,6 +496,10 @@ Texture g_SelectMapTitle{};
 Texture g_ArrMapsNames[g_AmountOfMaps]{};
 UIButton g_ArrMapsButtons[g_AmountOfMaps]{};
 
+//Difficulty scales
+float g_BloonSpeedScalar{ 1 }; // goes up
+float g_MoneyReductionScalar{ 1 }; // goes down
+
 // Declare your own functions here
 void DrawMainMenu();
 void UpdateMainMenu(float elapsedSec);
@@ -508,9 +511,11 @@ void DrawBloons();
 void DrawMonkeys();
 
 void StartWave();
+void UpdateDifficultyScaling();
 void RestartGame();
 
 void DrawUI();
+void ForceUIOffTheScreen();
 void UpdateUIShopMenu(float elapsedSec);
 void UpdateUIUpgradeMenu(float elapsedSec);
 void UpdateUINextWave(float elapsedSec);

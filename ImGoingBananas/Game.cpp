@@ -719,11 +719,15 @@ void StartGame()
 {
 	g_Cols = GetCurrentGridCols();
 	g_Rows = GetCurrentGridRows();
+	g_MoneyReductionScalar = 1;
+	g_BloonSpeedScalar = 1;
+	g_CurrentWave = 0;
 	g_BoardTextures = new Texture*[g_Cols * g_Rows] {};
 	g_BoardGrid = GetCurrentBoardGrid();
 	g_CellSize = Point2f{ g_WindowWidth / g_Cols, g_WindowHeight / g_Rows };
 	InitPath();
 	InitPathTextures();
+	ForceUIOffTheScreen();
 }
 
 void InitPath()
@@ -853,6 +857,7 @@ void DrawBoard()
 void StartWave()
 {
 	++g_CurrentWave;
+	UpdateDifficultyScaling();
 	
 	int bloonsHpToSpawn{static_cast<int>( ceil(20 + pow(2 * g_CurrentWave,1.5f))) };
 	int* arrBloonsToSpawn{ new int[g_AmountOfBloonsTextures] {} };
@@ -867,7 +872,7 @@ void StartWave()
 		bloonRandomOffsetFactor = 0;
 		maxTierOfBloon = 1;
 	}
-	else if (bloonsHpToSpawn  < 40)
+	else if (bloonsHpToSpawn < 40)
 	{
 		bloonRandomOffsetFactor = 1;
 		maxTierOfBloon = 2;
@@ -991,6 +996,32 @@ void StartWave()
 
 	
 }
+void UpdateDifficultyScaling()
+{
+	if (g_CurrentWave < 10)
+		return;
+
+	if (g_CurrentWave < 20)
+	{
+		g_BloonSpeedScalar += 0.05f;
+		g_MoneyReductionScalar = 0.6f;
+	}
+	else if (g_CurrentWave < 30)
+	{
+		g_BloonSpeedScalar += 0.1f;
+		g_MoneyReductionScalar = 0.3f;
+	}
+	else if (g_CurrentWave < 40)
+	{
+		g_BloonSpeedScalar += 0.2f;
+		g_MoneyReductionScalar = 0.1f;
+	}
+	else
+	{
+		g_BloonSpeedScalar += 0.5f;
+		g_MoneyReductionScalar = 0.05f;
+	}
+}
 
 void RestartGame()
 {
@@ -1076,7 +1107,7 @@ void UpdateBloons(float elapsedSec)
 
 		float distance{ GetDistance(g_ArrBloons[index].location, g_Path[g_ArrBloons[index].currentNavigationPointId])  };
 
-		if (GetDistance(g_ArrBloons[index].location, g_Path[g_PathWaypointAmount - 1]) < g_ArrBloons[index].speed * elapsedSec) {
+		if (GetDistance(g_ArrBloons[index].location, g_Path[g_PathWaypointAmount - 1]) < g_ArrBloons[index].speed * g_BloonSpeedScalar * elapsedSec) {
 			g_PlayerHp -= floor(pow(g_ArrBloons[index].hp, 0.66f));
 			DestroyBloon(g_ArrBloons[index]);
 			--g_AmountActiveBloons;
@@ -1087,10 +1118,10 @@ void UpdateBloons(float elapsedSec)
 			(g_Path[g_ArrBloons[index].currentNavigationPointId].y - g_ArrBloons[index].location.y) / distance
 		};
 
-		g_ArrBloons[index].location.x += normalVector.x * g_ArrBloons[index].speed * elapsedSec;
-		g_ArrBloons[index].location.y += normalVector.y * g_ArrBloons[index].speed * elapsedSec;
+		g_ArrBloons[index].location.x += normalVector.x * g_ArrBloons[index].speed * g_BloonSpeedScalar * elapsedSec;
+		g_ArrBloons[index].location.y += normalVector.y * g_ArrBloons[index].speed * g_BloonSpeedScalar * elapsedSec;
 
-		if (distance < g_ArrBloons[index].speed * elapsedSec)
+		if (distance < g_ArrBloons[index].speed * g_BloonSpeedScalar * elapsedSec)
 		{
 			++g_ArrBloons[index].currentNavigationPointId;
 		}
@@ -1577,7 +1608,7 @@ void UpdateProjectiles(float elapsedSec)
 				{
 					//Behaviour handling on overlap if projectile can pierce multiple bloons AND hasn't pierced
 					//given bloon before
-					g_Money += g_ArrBloons[bloonIdx].moneyDropped;
+					g_Money += ceilf(g_ArrBloons[bloonIdx].moneyDropped * g_MoneyReductionScalar);
 					g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
 					g_ArrProjectiles[projectileIdx].piercedBloonIds[g_ArrProjectiles[projectileIdx].bloonsPierced] = bloonIdx;
 					++g_ArrProjectiles[projectileIdx].bloonsPierced;
@@ -1593,7 +1624,7 @@ void UpdateProjectiles(float elapsedSec)
 				else 
 				{
 					//Default projectile behaviour on hit or once crossbow projectile pierces it's max amount of bloons
-					g_Money += g_ArrBloons[bloonIdx].moneyDropped;
+					g_Money += ceilf(g_ArrBloons[bloonIdx].moneyDropped * g_MoneyReductionScalar);
 					g_ArrBloons[bloonIdx].hp -= g_ArrProjectiles[projectileIdx].damage;
 					DeletePiercedBloonIds(g_ArrProjectiles[projectileIdx]);
 					SwapProjectilesInArray(g_ArrProjectiles[projectileIdx], g_ArrProjectiles[g_ProjectilesOnBoardAmount - 1]);
@@ -1847,26 +1878,35 @@ void DrawUI()
 		{
 			buyButton = &g_ArrBuyUpgradeBtn[1];
 			g_ArrBuyUpgradeBtn[0].rect.left = -1000; // get button far away so we can't click it when upgrades are maxed
+			const Point2f buyButtonTopLeft{ UIUpgradeTopCenter.x - (*buyButton).rect.width / 2.f,
+			currentUpgradeTextTopLeft.y + (*buyButton).rect.height };
+			(*buyButton).rect.left = buyButtonTopLeft.x;
+			(*buyButton).rect.top = buyButtonTopLeft.y;
+
+			DrawTexture((*buyButton).texture, buyButtonTopLeft);
+		}
+		else
+		{
+			const Point2f buyButtonTopLeft{ UIUpgradeTopCenter.x - (*buyButton).rect.width / 2.f,
+			currentUpgradeTextTopLeft.y + (*buyButton).rect.height };
+			(*buyButton).rect.left = buyButtonTopLeft.x;
+			(*buyButton).rect.top = buyButtonTopLeft.y;
+
+			DrawTexture((*buyButton).texture, buyButtonTopLeft);
+
+			int cost{ GetMonkeyUpgradesFromIndex(g_ArrMonkeys[g_SelectedMonkeyId].monkeyId)[g_ArrMonkeys[g_SelectedMonkeyId].monkeyUpgradeTier].cost };
+			const Point2f costTextTopCenter{ UIUpgradeTopCenter.x + g_MoneyIcon.width / 2.f,
+				currentUpgradeTextTopLeft.y + (*buyButton).rect.height * 2 };
+			const float costTextWidth{ DrawNumberSequenceTopCenter(cost, costTextTopCenter) };
+
+			const Point2f moneyIconTopLeft{ costTextTopCenter.x - g_MoneyIcon.width - costTextWidth, costTextTopCenter.y };
+			DrawTexture(g_MoneyIcon, moneyIconTopLeft);
 		}
 
-		const Point2f buyButtonTopLeft{ UIUpgradeTopCenter.x - (*buyButton).rect.width / 2.f,
-			currentUpgradeTextTopLeft.y + (*buyButton).rect.height };
-		(*buyButton).rect.left = buyButtonTopLeft.x;
-		(*buyButton).rect.top = buyButtonTopLeft.y;
-
-		DrawTexture((*buyButton).texture, buyButtonTopLeft);
-
-		int cost{ GetMonkeyUpgradesFromIndex(g_ArrMonkeys[g_SelectedMonkeyId].monkeyId)[g_ArrMonkeys[g_SelectedMonkeyId].monkeyUpgradeTier].cost };
-		const Point2f costTextTopCenter{ UIUpgradeTopCenter.x + g_MoneyIcon.width / 2.f,
-			currentUpgradeTextTopLeft.y + (*buyButton).rect.height * 2 };
-		const float costTextWidth{ DrawNumberSequenceTopCenter(cost, costTextTopCenter) };
-
-		const Point2f moneyIconTopLeft{ costTextTopCenter.x - g_MoneyIcon.width - costTextWidth, costTextTopCenter.y };
-		if (costTextWidth > 0)
-			DrawTexture(g_MoneyIcon, moneyIconTopLeft);
+		
 
 		const Point2f sellBtnTopLeft{ UIUpgradeTopCenter.x - g_SellMonkeyBtn.rect.width / 2.f,
-			costTextTopCenter.y + g_MoneyIcon.height + g_SellMonkeyBtn.rect.height / 2.f };
+			currentUpgradeTextTopLeft.y + (*buyButton).rect.height * 2 + g_MoneyIcon.height + g_SellMonkeyBtn.rect.height / 2.f };
 		DrawTexture(g_SellMonkeyBtn.texture, sellBtnTopLeft);
 		g_SellMonkeyBtn.rect.left = sellBtnTopLeft.x;
 		g_SellMonkeyBtn.rect.top = sellBtnTopLeft.y;
@@ -1918,7 +1958,15 @@ void DrawUI()
 	Point2f currentMoneyTopLeft{ displayOffset.x, displayOffset.y + currentHpTopLeft.y + g_CurrentHpText.height };
 	DrawTexture(g_MoneyIcon, currentMoneyTopLeft);
 	currentMoneyTopLeft.x += g_MoneyIcon.width;
-	DrawNumberSequenceTopLeft(g_Money, currentMoneyTopLeft);
+	if (DrawNumberSequenceTopLeft(g_Money, currentMoneyTopLeft) == 0)
+		DrawTexture(g_ArrNumbers[0], currentMoneyTopLeft);
+}
+void ForceUIOffTheScreen()
+{
+	g_UIShopShiftTransition = g_UIBackgroundWidth;
+	g_UIShopHorizontalOffset = g_UIBackgroundWidth;
+	g_UIUpgradeShiftTransition = g_UIBackgroundWidth;
+	g_UIUpgradeHorizontalOffset = g_UIBackgroundWidth;
 }
 void UpdateUIShopMenu(float elapsedSec)
 {
@@ -2006,7 +2054,7 @@ void UpdateUINextWave(float elapsedSec)
 			if (g_IsSecretRolled == false) {
 				//Determines if a secret new wave button appears this wave
 				g_AlternateBuyButtonOn = false;
-				if (rand() % 2 == 0 && g_CurrentWave!=0 &&g_CurrentWave!=1) {
+				if (rand() % 20 == 0 && g_CurrentWave != 0 && g_CurrentWave != 1) {
 					//std::cout << "Secret, shhh" << std::endl;
 					g_AlternateBuyButtonOn = true;
 				}
