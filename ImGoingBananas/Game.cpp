@@ -384,16 +384,24 @@ void OnKeyDownEvent(SDL_Keycode key)
 	if (key == SDLK_r) {
 		RestartGame();
 	}
-
-	if (key == SDLK_i) {
+	else if (key == SDLK_i) {
 		std::cout << "\033[33m Welcome to 'I'm going Bananas! Your goal is to not let any of bloons on board reach your base\n";
 		std::cout << "You can open menu to buy monkeys by pressing the 'TAB' key. Don't forget to keep enough money for it!\n";
 		std::cout << "To exit preview mode, press 'esc' key\n";
 		std::cout << "You may upgrade by selecting a monkey already on field and pressing UPGRAGE button!\n";
 		std::cout << "To close upgrade menu, click the game window anywhere else than the upgrade screen\n";
 		std::cout << "You may also sell the monkey to refund a part of the cost and free up the space on board!\n";
-		std::cout << "To return to main menu use the 'm' key or retry the stage from beginning by pressing the 'r' key\n";
+		std::cout << "To return to main menu use the 'm' key or retry the stage from beginning by pressing the 'r' key and see credits by pressing 'c'\n";
 		std::cout << "Good luck \n\n This Project was Developed by The Them (Joachim Psuty-Lipski and Egor Tatarli) from group GD14 \033[0m\n";
+	}
+	else if(key == SDLK_c)
+	{
+		std::cout << "\n\033[33m Credits:\n";
+		std::cout << "Banana pixel art in the main menu - chipdesigns\n";
+		std::cout << "Bloons sprites pixel art - Cookielot!\n";
+		std::cout << "Monkeys sprites pixel art - Adi\n";
+		std::cout << "Grass, paths sprites pixel art - Adi\n";
+		std::cout << "Everything else including UI and Main Menu splash screen made by The Them development team\033[0m\n";
 	}
 }
 
@@ -1435,7 +1443,7 @@ void ResizeProjectileArray()
 	{
 		if (index >= g_MaxProjectilesOnBoard)
 		{
-			std::cout << "Cannot write more projectiles to the array! Skipping...\n";
+			//std::cout << "Cannot write more projectiles to the array! Skipping...\n";
 			break;
 		}
 

@@ -4,7 +4,7 @@ using namespace utils;
 
 #pragma region gameInformation
 // TODO: Set your name and group in the title here
-std::string g_WindowTitle{ "Im goin bananas! - Name, firstname - 1DAE14" };
+std::string g_WindowTitle{ "Im goin bananas! - Egor Tatarli, Joachim Psuty-Lipski - 1DAE14" };
 
 // Change the window dimensions here
 float g_WindowWidth{ 800 };
